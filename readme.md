@@ -2,4 +2,16 @@
 
 Monorepo for tools to manage monorepos!
 
+## tools
+
+---
+
+### semver-yeasy
+
+This is a tool to help version deployables in a monorepo. 
+
+Internally, it uses gitversion to help ease the setup of gitflow in your projects and generate prefixed tags.
+
+---
+
 \- Saurav Sahu
