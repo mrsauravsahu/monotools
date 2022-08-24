@@ -1,3 +1,5 @@
+name: 'versioning'
+
 on:
   pull_request:
     branches:
@@ -15,30 +17,36 @@ env:
   MAIN_BRANCHES: ("develop" "main")
   GITVERSION_TAG_PROPERTY_PULL_REQUESTS: .SemVer
   GITVERSION_TAG_PROPERTY_DEFAULT: .SemVer
-  GITVERSION_TAG_PROPERTY_DEVELOP: .MajorMinorPatch,.PreReleaseLabelWithDash
-  GITVERSION_TAG_PROPERTY_RELEASE: .MajorMinorPatch,.PreReleaseLabelWithDash
-  GITVERSION_TAG_PROPERTY_HOTFIX: .MajorMinorPatch,.PreReleaseLabelWithDash
+  GITVERSION_TAG_PROPERTY_DEVELOP: .SemVer
+  GITVERSION_TAG_PROPERTY_RELEASE: .SemVer
+  GITVERSION_TAG_PROPERTY_HOTFIX: .SemVer
   GITVERSION_TAG_PROPERTY_MAIN: .MajorMinorPatch
+  GITVERSION_REPO_TYPE: MONOREPO
+  GITVERSION_CONFIG_SINGLE_APP: '/repo/.cicd/common/.gitversion.yml'
+  GITVERSION_CONFIG_MONOREPO: '/repo/apps/${svc}/.gitversion.yml'
 
 jobs:
   gitversion:
     name: gitversion
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
     - name: Fetch all history for all tags and branches
-      run: |
-        git fetch --unshallow
-        git checkout main && git checkout -
-        git checkout develop && git checkout -
+      run: git fetch --unshallow && git checkout develop && git checkout main
 
     #- name: Check base ref
     #  run: echo "baseref='$GITHUB_BASE_REF' ref='$GITHUB_REF' headref='$GITHUB_HEAD_REF' refname='$GITHUB_REF_NAME' eventname='$GITHUB_EVENT_NAME'"
 
     - name: Checkout to branch
-      run: . ./apps/semver-yeasy/semver-yeasy.sh checkout 
+      run: |
+        if [ "${GITHUB_EVENT_NAME}" = 'push' ]; then
+          DIFF_DEST="${GITHUB_REF_NAME}"
+        else
+          DIFF_DEST="${GITHUB_HEAD_REF}"
+        fi
+        git checkout ${DIFF_DEST}
 
     - name: Calculate changed services
       id: calculate_changed_services
@@ -58,38 +66,69 @@ jobs:
         if [ "$(echo "${DIFF_DEST}" | grep -o '^hotfix/')" = "hotfix/" ]; then
           DIFF_SOURCE="main"
         fi
-
-        # service change calculation with diff - ideally use something like 'plz' or 'bazel'
-        if [ "$(git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^common/' > /dev/null && echo 'common changed')" = 'common changed' ]; then
-          changed_services=`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`
-        else
-          changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z-]*' | sort | uniq`
-        fi
-        changed_services=$(printf '%s' "$changed_services" | jq --raw-input --slurp '.')
-        echo "::set-output name=changed_services::$changed_services"
         echo "::set-output name=diff_source::$DIFF_SOURCE"
         echo "::set-output name=diff_dest::$DIFF_DEST"
         echo "DIFF_SOURCE='$DIFF_SOURCE'"
         echo "DIFF_DEST='$DIFF_DEST'"
-        echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
+
+        # setting empty outputs otherwise next steps fail during preprocessing stage
+        echo "::set-output name=changed::''"
+        echo "::set-output name=changed_services::''"
+
+        # service change calculation with diff - ideally use something like 'plz' or 'bazel'
+        if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
+          if [ `git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^src/' | sort | uniq` = 'src/' ]; then
+            changed=true
+          else
+            changed=false
+          fi
+          echo "changed='${changed}'"
+          echo "::set-output name=changed::$changed"
+        else
+          if [ "$(git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^common/' > /dev/null && echo 'common changed')" = 'common changed' ]; then
+            changed_services=`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`
+          else
+            changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z-]*' | sort | uniq`
+          fi
+          changed_services=$(printf '%s' "$changed_services" | jq --raw-input --slurp '.')
+          echo "::set-output name=changed_services::$changed_services"
+          echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
+        fi
 
     - name: Calculate service versions
       id: calculate_service_versions
       run: |
-        changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
-        if [ "${#changed_services[@]}" = "0" ]; then
-          service_versions_txt='## impact surface\nNo services changed\n'
-        else
-          service_versions_txt="## impact surface\n"
-          for svc in "${changed_services[@]}"; do
-            echo "calculation for ${svc}"
-            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+        CONFIG_FILE_VAR="GITVERSION_CONFIG_${GITVERSION_REPO_TYPE}"
+        CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
+        if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
+          service_versions_txt='## version bump\n'
+          if [ "${{ steps.calculate_changed_services.outputs.changed }}" = 'true' ]; then
+            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
+            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-            service_versions_txt+="- ${svc} - v${service_version}\n"
-          done
+            service_versions_txt+="v${service_version}\n"
+          else
+            service_versions_txt+='\nNo version bump required\n'
+          fi
+        else
+          service_versions_txt='## impact surface\n'
+          changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
+          if [ "${#changed_services[@]}" = "0" ]; then
+            service_versions_txt+='No services changed\n'
+          else
+            service_versions_txt="## impact surface\n"
+            for svc in "${changed_services[@]}"; do
+              echo "calculation for ${svc}"
+              docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
+              gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+              GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
+              GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+              service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+              service_versions_txt+="- ${svc} - v${service_version}\n"
+            done
+          fi
         fi
         # fix multiline variables
         # from: https://github.com/actions/create-release/issues/64#issuecomment-638695206
@@ -112,31 +151,50 @@ jobs:
     - name: Tag build
       if: ${{ github.event_name == 'push' && (startsWith(steps.calculate_changed_services.outputs.diff_dest, 'release') || startsWith(steps.calculate_changed_services.outputs.diff_dest, 'hotfix') || contains(env.MAIN_BRANCHES, steps.calculate_changed_services.outputs.diff_dest)) }}
       run: |
+        CONFIG_FILE_VAR="GITVERSION_CONFIG_${GITVERSION_REPO_TYPE}"
+        CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
+
         # https://github.com/orgs/community/discussions/26560
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git config --global user.name "github-actions"
-        changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
-        for svc in "${changed_services[@]}"; do
-          echo "calculation for ${svc}"
-          docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-          gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
-          GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-          GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-          svc_without_prefix=$(echo "${svc}" | sed "s|^apps/||")
-          service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-          if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
-            echo tag_filter "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")"
-            echo tags with tag_filter "$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")")"
-            echo tags grepped on commit count "$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$')"
-            echo tags grepped on commit count and period removed "$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$')"
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
-            echo previous_commit_count $previous_commit_count
-            next_commit_count=$((previous_commit_count+1))
-            echo next_commit_count $next_commit_count
-            full_service_version="${service_version}.${next_commit_count}"
-          else
-            full_service_version="${service_version}"
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git config --global user.name 'github-actions'
+        if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
+          if [ "${{ steps.calculate_changed_services.outputs.changed }}" = 'true' ]; then
+            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
+            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
+              svc_without_prefix='v'
+              previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+              next_commit_count=$((previous_commit_count+1))
+              version_without_count=$(echo "${gitversion_calc}" | jq -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
+              full_service_version="${version_without_count}.${next_commit_count}"
+            else
+              full_service_version="${service_version}"
+            fi
+            git tag -a "v${full_service_version}" -m "v${full_service_version}"
+            git push origin "v${full_service_version}"
           fi
-          git tag -a "${svc_without_prefix}/v${full_service_version}" -m "${svc_without_prefix}/v${full_service_version}"
-          git push origin "${svc_without_prefix}/v${full_service_version}"
-        done
+        else
+          changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
+          for svc in "${changed_services[@]}"; do
+            echo "calculation for ${svc}"
+            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
+            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
+              previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+              next_commit_count=$((previous_commit_count+1))
+              version_without_count=$(echo "${gitversion_calc}" | jq -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
+              full_service_version="${version_without_count}.${next_commit_count}"
+            else
+              full_service_version="${service_version}"
+            fi
+            svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
+            git tag -a "${svc_without_prefix}/v${full_service_version}" -m "${svc_without_prefix}/v${full_service_version}"
+            git push origin "${svc_without_prefix}/v${full_service_version}"
+          done
+        fi
