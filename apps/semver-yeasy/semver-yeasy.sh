@@ -77,7 +77,7 @@ calculate-version)
     CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
-        if [ "${{ steps.calculate_changed_services.outputs.changed }}" = 'true' ]; then
+        if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
@@ -89,7 +89,7 @@ calculate-version)
         fi
     else
         service_versions_txt='## impact surface\n'
-        changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
+        changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
         if [ "${#changed_services[@]}" = "0" ]; then
         service_versions_txt+='No services changed\n'
         else
@@ -116,10 +116,10 @@ calculate-version)
 update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
     # from https://github.com/actions/checkout/issues/58#issuecomment-614041550
-    jq -nc '{"body": "${{ fromJSON(steps.calculate_service_versions.outputs.PR_BODY) }}" }' | \
+    jq -nc "{\"body\": \"${PR_BODY}\" }" | \
     curl -sL  -X PATCH -d @- \
         -H "Content-Type: application/json" \
-        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
         "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
 ;;
 
@@ -131,7 +131,7 @@ tag)
     git config --global user.email 'github-actions[bot]@users.noreply.github.com'
     git config --global user.name 'github-actions'
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
-        if [ "${{ steps.calculate_changed_services.outputs.changed }}" = 'true' ]; then
+        if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
@@ -150,8 +150,7 @@ tag)
         git push origin "v${full_service_version}"
         fi
     else
-        changed_services=( ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }} )
-        for svc in "${changed_services[@]}"; do
+        for svc in "${SEMVERYEASY_CHANGED_SERVICES[@]}"; do
         echo "calculation for ${svc}"
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
