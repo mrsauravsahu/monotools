@@ -116,7 +116,7 @@ calculate-version)
 update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
     # from https://github.com/actions/checkout/issues/58#issuecomment-614041550
-    jq -nc "{\"body\": \"${PR_BODY}\" }" | \
+    jq -nc "{\"body\": \"${SEMVERY_YEASY_PR_BODY}\" }" | \
     curl -sL  -X PATCH -d @- \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
