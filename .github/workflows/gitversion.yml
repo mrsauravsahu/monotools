@@ -55,6 +55,7 @@ jobs:
 
     - name: Update PR description
       env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SEMVERY_YEASY_PR_BODY: ${{ fromJSON(steps.calculate_service_versions.outputs.PR_BODY) }}
       if: ${{ github.event_name == 'pull_request' }}
       run: . ./apps/semver-yeasy/semver-yeasy.sh update-pr
