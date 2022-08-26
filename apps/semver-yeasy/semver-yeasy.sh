@@ -157,6 +157,7 @@ tag)
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+        svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
             previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
             next_commit_count=$((previous_commit_count+1))
@@ -165,7 +166,6 @@ tag)
         else
             full_service_version="${service_version}"
         fi
-        svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         git tag -a "${svc_without_prefix}/v${full_service_version}" -m "${svc_without_prefix}/v${full_service_version}"
         git push origin "${svc_without_prefix}/v${full_service_version}"
         done
