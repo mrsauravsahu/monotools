@@ -74,7 +74,6 @@ changed)
 
 calculate-version)
     CONFIG_FILE_VAR="GITVERSION_CONFIG_${GITVERSION_REPO_TYPE}"
-    CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
@@ -96,6 +95,7 @@ calculate-version)
         service_versions_txt="## impact surface\n"
         for svc in "${changed_services[@]}"; do
             echo "calculation for ${svc}"
+            CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
             docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
             gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
@@ -125,7 +125,6 @@ update-pr)
 
 tag)
     CONFIG_FILE_VAR="GITVERSION_CONFIG_${GITVERSION_REPO_TYPE}"
-    CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
 
     # https://github.com/orgs/community/discussions/26560
     git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -152,6 +151,7 @@ tag)
     else
         for svc in "${SEMVERYEASY_CHANGED_SERVICES[@]}"; do
         echo "calculation for ${svc}"
+        CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
