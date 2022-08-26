@@ -134,7 +134,7 @@ tag)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
@@ -154,7 +154,7 @@ tag)
         echo "calculation for ${svc}"
         docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
         gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo '${{ steps.calculate_changed_services.outputs.diff_dest }}' | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
