@@ -1,0 +1,16 @@
+{
+  "name": "@semver-yeasy/tests",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "ROOT_TEST_FOLDER=`pwd` uvu ."
+  },
+  "author": "Saurav Sahu <mrsauravsahu@outlook.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "child-process-promise": "^2.2.1",
+    "uvu": "^0.5.6"
+  }
+}
