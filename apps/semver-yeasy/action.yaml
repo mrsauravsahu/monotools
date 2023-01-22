@@ -1,0 +1,15 @@
+name: 'monotools/semver-yeasy'
+description: 'Semver Versioning made easy'
+inputs:
+  mode:
+    description: 'which mode to run'
+    required: true
+    default: 'changed'
+outputs:
+  tag:
+    description: 'The tags to be made for this current commit'
+runs:
+  using: 'docker'
+  image: 'dockerfile'
+  args:
+    - ${{ inputs.mode }}
