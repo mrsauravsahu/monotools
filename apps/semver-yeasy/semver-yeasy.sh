@@ -77,8 +77,8 @@ calculate-version)
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
+        dotnet-gitversion $(pwd) /config "${CONFIG_FILE}"
+        gitversion_calc=$(dotnet-gitversion $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -96,8 +96,8 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             echo "calculation for ${svc}"
             CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+            dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml"
+            gitversion_calc=$(dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -131,8 +131,8 @@ tag)
     git config --global user.name 'github-actions'
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
+        dotnet-gitversion $(pwd) /config "${CONFIG_FILE}"
+        gitversion_calc=$(dotnet-gitversion $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -152,8 +152,8 @@ tag)
         for svc in "${SEMVERYEASY_CHANGED_SERVICES[@]}"; do
         echo "calculation for ${svc}"
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+        dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml"
+        gitversion_calc=$(dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
