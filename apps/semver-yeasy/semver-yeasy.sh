@@ -42,14 +42,14 @@ changed)
     if [ "$(echo "${DIFF_DEST}" | grep -o '^hotfix/')" = "hotfix/" ]; then
         DIFF_SOURCE="main"
     fi
-    echo "::set-output name=diff_source::$DIFF_SOURCE"
-    echo "::set-output name=diff_dest::$DIFF_DEST"
+    echo "diff_source=$DIFF_SOURCE" >> $GITHUB_OUTPUT
+    echo "diff_dest=$DIFF_DEST" >> $GITHUB_OUTPUT
     echo "DIFF_SOURCE='$DIFF_SOURCE'"
     echo "DIFF_DEST='$DIFF_DEST'"
 
     # setting empty outputs otherwise next steps fail during preprocessing stage
-    echo "::set-output name=changed::''"
-    echo "::set-output name=changed_services::''"
+    echo "changed=''" >> $GITHUB_OUTPUT
+    echo "changed_services=''" >> $GITHUB_OUTPUT
 
     # service change calculation with diff - ideally use something like 'plz' or 'bazel'
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
@@ -59,7 +59,7 @@ changed)
         changed=false
         fi
         echo "changed='${changed}'"
-        echo "::set-output name=changed::$changed"
+        echo "changed=$changed" >> $GITHUB_OUTPUT
     else
         if [ "$(git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^common/' > /dev/null && echo 'common changed')" = 'common changed' ]; then
         changed_services=`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`
@@ -67,7 +67,7 @@ changed)
         changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z-]*' | sort | uniq`
         fi
         changed_services=$(printf '%s' "$changed_services" | jq --raw-input --slurp '.')
-        echo "::set-output name=changed_services::$changed_services"
+        echo "changed_services=$changed_services" >> $GITHUB_OUTPUT
         echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
     fi
 ;;
@@ -77,8 +77,8 @@ calculate-version)
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
+        /root/.dotnet/tools/dotnet-gitversion $(pwd) /config "${CONFIG_FILE}"
+        gitversion_calc=$(/root/.dotnet/tools/dotnet-gitversion $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -96,8 +96,8 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             echo "calculation for ${svc}"
             CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-            docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-            gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+            /root/.dotnet/tools/dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml"
+            gitversion_calc=$(/root/.dotnet/tools/dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -110,7 +110,7 @@ calculate-version)
     PR_BODY="${service_versions_txt}"
     PR_BODY=$(printf '%s' "$PR_BODY" | jq --raw-input --slurp '.')
     echo "${PR_BODY}"
-    echo "::set-output name=PR_BODY::$PR_BODY"
+    echo "PR_BODY=$PR_BODY" >> $GITHUB_OUTPUT
 ;;
 
 update-pr)
@@ -131,8 +131,8 @@ tag)
     git config --global user.name 'github-actions'
     if [ "${GITVERSION_REPO_TYPE}" = 'SINGLE_APP' ]; then
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "${CONFIG_FILE}")
+        /root/.dotnet/tools/dotnet-gitversion $(pwd) /config "${CONFIG_FILE}"
+        gitversion_calc=$(/root/.dotnet/tools/dotnet-gitversion $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -152,8 +152,8 @@ tag)
         for svc in "${SEMVERYEASY_CHANGED_SERVICES[@]}"; do
         echo "calculation for ${svc}"
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-        docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml"
-        gitversion_calc=$(docker run --rm -v "$(pwd):/repo" ${GITVERSION} /repo /config "/repo/${svc}/.gitversion.yml")
+        /root/.dotnet/tools/dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml"
+        gitversion_calc=$(/root/.dotnet/tools/dotnet-gitversion $(pwd) /config "/repo/${svc}/.gitversion.yml")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
