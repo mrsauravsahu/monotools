@@ -5,4 +5,4 @@ FROM alpine:3.10
 COPY semver-yeasy.sh /semver-yeasy.sh
 
 # Code file to execute when the docker container starts up (`semver-yeasy.sh`)
-ENTRYPOINT ["/semver-yeasy.sh"]
+ENTRYPOINT ["bash", "/semver-yeasy.sh"]
