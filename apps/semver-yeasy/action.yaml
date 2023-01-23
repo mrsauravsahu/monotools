@@ -1,8 +1,12 @@
 name: 'monotools/semver-yeasy'
 description: 'Semver Versioning made easy'
 inputs:
-  mode:
+  repo-type:
     description: 'which mode to run'
+    required: true
+    default: 'changed'
+  mode:
+    description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
     default: 'changed'
 outputs:
@@ -13,3 +17,4 @@ runs:
   image: 'dockerfile'
   args:
     - ${{ inputs.mode }}
+    - ${{ inputs.repo-type }}
