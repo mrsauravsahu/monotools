@@ -12,6 +12,9 @@ on:
     - 'release/**'
     - 'hotfix/**'
 
+env:
+  MAIN_BRANCHES: ("develop" "main")
+
 jobs:
   gitversion:
     name: gitversion
