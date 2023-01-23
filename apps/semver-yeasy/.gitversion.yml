@@ -1,6 +1,8 @@
 mode: MainLine
 tag-prefix: semver-easy/v
 branches:
+  develop:
+    increment: None
   main:
     increment: Minor
   release:
