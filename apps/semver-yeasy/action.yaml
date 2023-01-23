@@ -1,8 +1,12 @@
 name: 'monotools/semver-yeasy'
 description: 'Semver Versioning made easy'
 inputs:
-  mode:
+  repo-type:
     description: 'which mode to run'
+    required: true
+    default: 'changed'
+  mode:
+    description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
     default: 'changed'
 outputs:
@@ -11,5 +15,8 @@ outputs:
 runs:
   using: 'docker'
   image: 'dockerfile'
+  env:
+    GITVERSION_EXEC_PATH: /root/.dotnet/tools/dotnet-gitversion
   args:
     - ${{ inputs.mode }}
+    - ${{ inputs.repo-type }}
