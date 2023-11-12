@@ -115,9 +115,19 @@ calculate-version)
 
 update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
-    # from https://github.com/actions/checkout/issues/58#issuecomment-614041550
-    jq -nc "{\"body\": \"${SEMVERY_YEASY_PR_BODY}\" }" | \
-    curl -sL -X PATCH -d @- \
+
+    # Get the existing PR description
+    PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
+
+    # Update the PR description
+    UPDATED_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed -e '/\[comment\]: # \(START semver-yeasy\)/ {i\ $SEMVERY_YEASY_PR_BODY}' -e '/\[comment\]: # \(END semver-yeasy\)/ {a\ $SEMVERY_YEASY_PR_BODY}')
+
+    if [[ -z "$UPDATED_DESCRIPTION" ]]; then
+        UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
+    fi
+
+    # Update the PR with the updated description
+    curl -sL -X PATCH -d "{\"body\": \"$UPDATED_DESCRIPTION\" }" \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
         "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"

@@ -4,8 +4,8 @@
       "name": "first-version",
       "repoSetup": [
         "git commit -am 'initial commit' --allow-empty",
-        "git tag -a 'v0.1.0' -m 'v0.1.0'",
         "git checkout -b develop",
+        "git tag -a 'v0.1.0' -m 'v0.1.0'",
         "git commit -m 'one commit' --allow-empty"
       ],
       "inputs": {
@@ -14,7 +14,7 @@
           "SEMVERYEASY_CHANGED": "true"
         }
       },
-      "expectatedOutput": "v0.2.0-alpha.1"
+      "expectedOutput": "v0.2.0-alpha.1"
     }
   ]
 }
