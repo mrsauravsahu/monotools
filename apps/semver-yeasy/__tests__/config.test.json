@@ -18,7 +18,6 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-feature",
           "GITHUB_BASE_REF": "develop",
-          "GITVERSION_EXEC_PATH": "~/.dotnet/tools/dotnet-gitversion",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
         }
@@ -26,6 +25,34 @@
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
         "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n\\- \"apps/service1\"\\n\"\n"
+      }
+    },
+    {
+      "name": "monorepo: update-pr-description",
+      "repoSetup": [
+        "git checkout -b main",
+        "mkdir -p apps/semver-yeasy/src",
+        "cp ../../../../.gitversion.yml apps/semver-yeasy",
+        "git commit -am 'initial commit' --allow-empty",
+        "git tag -a 'v0.1.0' -m 'v0.1.0'",
+        "git checkout -b develop",
+        "git checkout -b feat/my-feature",
+        "echo \"console.log('hello world')\" > apps/semver-yeasy/src/main.js",
+        "git add apps; git commit -m 'one commit' --allow-empty"
+      ],
+      "inputs": {
+        "env": {
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "feat/my-feature",
+          "GITHUB_BASE_REF": "develop",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy",
+          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
+          "PR_DESCRIPTION": "this is the current PR description"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/semver-yeasy\"\n",
+        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/semver-yeasy - v0.2.0-alpha.1\\\\n\"\n"
       }
     }
   ]
