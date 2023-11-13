@@ -23,6 +23,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    #  Fixes "fatal: detected dubious ownership in repository at '/github/workspace'" in Github actions
+    - name: Prereq steps
+      run: |
+        git config --global --add safe.directory /github/workspace
+
     - name: Fetch all history for all tags and branches
       run: |
         git fetch --unshallow
