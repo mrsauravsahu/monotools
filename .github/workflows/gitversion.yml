@@ -26,7 +26,7 @@ jobs:
     #  Fixes "fatal: detected dubious ownership in repository at '/github/workspace'" in Github actions
     - name: Prereq steps
       run: |
-        git config --system --add safe.directory /github/workspace
+        git config --global --add safe.directory /github/workspace
 
     - name: Fetch all history for all tags and branches
       run: |
