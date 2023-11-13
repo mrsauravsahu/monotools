@@ -66,7 +66,8 @@ jobs:
         mode: 'calculate-version'
 
     - name: Calculate service version calculation
-      id: calculate_service_versions
+      env:
+        SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
       run: |
         services=( $SEMVERYEASY_CHANGED_SERVICES )
         for service in "${services[@]}"; do
@@ -74,8 +75,6 @@ jobs:
           npm t
           popd
         done
-      env:
-        SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
 
     - name: Update PR description
       if: ${{ github.event_name == 'pull_request' }}
