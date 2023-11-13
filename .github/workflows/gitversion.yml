@@ -23,6 +23,19 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    #  Fixes "fatal: detected dubious ownership in repository at '/github/workspace'" in Github actions
+    - name: Prereq steps
+      run: |
+        git config --global --add safe.directory /github/workspace
+
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Install GitVersion.Tool
+      run: dotnet tool install --global GitVersion.Tool
+
     - name: Fetch all history for all tags and branches
       run: |
         git fetch --unshallow
@@ -43,15 +56,26 @@ jobs:
         repo-type: 'MONOREPO'
         mode: 'changed'
 
-    - name: Calculate service services
+    - name: Calculate service version calculation
       id: calculate_service_versions
       uses: ./apps/semver-yeasy
       env:
-        SEMVERYEASY_CHANGED: ${{ steps.calculate_changed_services.outputs.changed }}
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
       with:
         repo-type: 'MONOREPO'
         mode: 'calculate-version'
+
+    - name: Run tests
+      env:
+        SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
+      run: |
+        services=( $SEMVERYEASY_CHANGED_SERVICES )
+        ROOT_REPO_DIR=`pwd`
+        for service in "${services[@]}"; do
+          cd "${service}/__tests__"
+          npm run ci:checks
+          cd ${ROOT_REPO_DIR}
+        done
 
     - name: Update PR description
       if: ${{ github.event_name == 'pull_request' }}

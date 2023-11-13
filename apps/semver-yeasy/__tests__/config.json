@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "monorepo: one-service-changed",
+      "repoSetup": [
+        "git checkout -b main",
+        "mkdir -p apps/service1/src",
+        "cp ../../../../.gitversion.yml apps/service1",
+        "git commit -am 'initial commit' --allow-empty",
+        "git tag -a 'v0.1.0' -m 'v0.1.0'",
+        "git checkout -b develop",
+        "git checkout -b feat/my-feature",
+        "echo \"console.log('hello world')\" > apps/service1/src/main.js",
+        "git add apps; git commit -m 'one commit' --allow-empty"
+      ],
+      "inputs": {
+        "env": {
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "feat/my-feature",
+          "GITHUB_BASE_REF": "develop",
+          "GITVERSION_EXEC_PATH": "~/.dotnet/tools/dotnet-gitversion",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
+          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
+        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n\\- \"apps/service1\"\\n\"\n"
+      }
+    }
+  ]
+}
