@@ -24,7 +24,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
-        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n\\- \"apps/service1\"\\n\"\n"
+        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/service1 - v0.2.0-alpha.1\\\\n\"\n"
       }
     },
     {
