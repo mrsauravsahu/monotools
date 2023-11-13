@@ -71,7 +71,7 @@ jobs:
       run: |
         services=( $SEMVERYEASY_CHANGED_SERVICES )
         for service in "${services[@]}"; do
-          cd $service
+          cd "${service}/__tests__"
           npm t
           popd
         done
