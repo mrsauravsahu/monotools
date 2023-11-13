@@ -42,7 +42,7 @@ testConfig.tests.forEach(currentTest => {
     // --------
 
     const pullRequestDescriptionFileName = `../output.pr-description.txt`
-    await exec(
+    var calculationCommand = await exec(
       `GITHUB_OUTPUT=\'${pullRequestDescriptionFileName}\' bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`, {
       env: {
         ...currentTest.inputs.env,
@@ -50,6 +50,8 @@ testConfig.tests.forEach(currentTest => {
       },
       cwd: currentTestGitRepoPath
     })
+
+    console.log(calculationCommand.stdout)
 
     const pullRequestDescriptionCmd = await exec(`cat ${pullRequestDescriptionFileName}`, { cwd: currentTestGitRepoPath })
     assert.equal(pullRequestDescriptionCmd.stdout, currentTest.expectedOutputs.pullRequestDescription,
