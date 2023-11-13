@@ -4,11 +4,9 @@ inputs:
   repo-type:
     description: 'which mode to run'
     required: true
-    default: 'changed'
   mode:
     description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
-    default: 'changed'
 outputs:
   tag:
     description: 'The tags to be made for this current commit'
