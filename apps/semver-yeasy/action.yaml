@@ -7,10 +7,15 @@ inputs:
   mode:
     description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
+outputs:
+  changed_services:
+    description: "Changed services between diff_source and diff_dest"
+    value: ${{ steps.versioning.outputs.changed_services }}
 runs:
   using: 'composite'
   steps:
-  - run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
+  - id: versioning
+    run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
     shell: bash
     env:
       GITVERSION_EXEC_PATH: /root/.dotnet/tools/dotnet-gitversion
