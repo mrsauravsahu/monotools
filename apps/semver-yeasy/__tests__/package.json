@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "ci:checks": "npm ci && npm t",
-    "test": "SEMVER_YEASY_ROOT_DIRECTORY=`dirname $(pwd)` ROOT_TEST_FOLDER=`pwd` uvu ."
+    "test": "SEMVER_YEASY_ROOT_DIRECTORY=`dirname $(pwd)` ROOT_TEST_FOLDER=`pwd` uvu . tests.js"
   },
   "author": "Saurav Sahu <mrsauravsahu@outlook.com>",
   "license": "ISC",

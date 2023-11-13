@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 import { exec } from 'child-process-promise';
 import testConfig from './config.test.json' assert { type: "json" };
 
-var { ROOT_TEST_FOLDER, SEMVER_YEASY_ROOT_DIRECTORY } = process.env;
+var { ROOT_TEST_FOLDER, SEMVER_YEASY_ROOT_DIRECTORY, GITVERSION_EXEC_PATH } = process.env;
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`)
 
 testConfig.tests.forEach(currentTest => {
@@ -38,6 +38,23 @@ testConfig.tests.forEach(currentTest => {
 
     const changesCmd = await exec(`cat ${changesFileName}`, { cwd: currentTestGitRepoPath })
     assert.equal(changesCmd.stdout, currentTest.expectedOutputs.changes)
+
+    // --------
+
+    const pullRequestDescriptionFileName = `../output.pr-description.txt`
+    await exec(
+      `GITHUB_OUTPUT=\'${pullRequestDescriptionFileName}\' bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`, {
+      env: {
+        ...currentTest.inputs.env,
+        GITVERSION_EXEC_PATH
+      },
+      cwd: currentTestGitRepoPath
+    })
+
+    const pullRequestDescriptionCmd = await exec(`cat ${pullRequestDescriptionFileName}`, { cwd: currentTestGitRepoPath })
+    assert.equal(pullRequestDescriptionCmd.stdout, currentTest.expectedOutputs.pullRequestDescription,
+    )
+
   })
 
   it.after(async () => await exec(`rm -r ${currentTestWorkspace}`))
