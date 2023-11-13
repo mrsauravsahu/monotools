@@ -1,7 +1,7 @@
 import { test as it } from 'uvu';
 import * as assert from 'uvu/assert';
 import { exec } from 'child-process-promise';
-import testConfig from './config.json' assert { type: "json" };
+import testConfig from './config.test.json' assert { type: "json" };
 
 var { ROOT_TEST_FOLDER, SEMVER_YEASY_ROOT_DIRECTORY } = process.env;
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`)

@@ -72,7 +72,7 @@ jobs:
         services=( $SEMVERYEASY_CHANGED_SERVICES )
         for service in "${services[@]}"; do
           cd "${service}/__tests__"
-          npm t
+          npm run ci:checks
           popd
         done
 
