@@ -7,14 +7,10 @@ inputs:
   mode:
     description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
-outputs:
-  tag:
-    description: 'The tags to be made for this current commit'
 runs:
-  using: 'docker'
-  image: 'dockerfile'
-  env:
-    GITVERSION_EXEC_PATH: /root/.dotnet/tools/dotnet-gitversion
-  args:
-    - ${{ inputs.mode }}
-    - ${{ inputs.repo-type }}
+  using: 'composite'
+  steps:
+  - run: ${{ github.action_path }}/test/script.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
+    shell: bash
+    env:
+      GITVERSION_EXEC_PATH: /root/.dotnet/tools/dotnet-gitversion
