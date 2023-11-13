@@ -10,7 +10,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-  - run: ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
+  - run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
     shell: bash
     env:
       GITVERSION_EXEC_PATH: /root/.dotnet/tools/dotnet-gitversion
