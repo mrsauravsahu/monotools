@@ -20,5 +20,3 @@ runs:
   - id: versioning
     run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
     shell: bash
-    env:
-      GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
