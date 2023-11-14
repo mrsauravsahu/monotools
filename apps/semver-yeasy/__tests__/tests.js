@@ -28,11 +28,19 @@ testConfig.tests.forEach(currentTest => {
   })
 
   it(`${currentTest.name}`, async () => {
+    const envVars = {
+      ...currentTest.inputs.env,
+      GITVERSION_EXEC_PATH,
+      TEST: "true",
+    };
+
+    // --------
+
     const changesFileName = `../output.changes.txt`
 
     await exec(
       `GITHUB_OUTPUT=\'${changesFileName}\' bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`, {
-      env: currentTest.inputs.env,
+      env: envVars,
       cwd: currentTestGitRepoPath
     })
 
@@ -42,19 +50,30 @@ testConfig.tests.forEach(currentTest => {
     // --------
 
     const pullRequestDescriptionFileName = `../output.pr-description.txt`
-    var calculationCommand = await exec(
+    await exec(
       `GITHUB_OUTPUT=\'${pullRequestDescriptionFileName}\' bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`, {
-      env: {
-        ...currentTest.inputs.env,
-        GITVERSION_EXEC_PATH
-      },
+      env: envVars,
+
+      cwd: currentTestGitRepoPath
+    })
+
+    const pullRequestDescriptionCmd = await exec(`cat ${pullRequestDescriptionFileName}`, { cwd: currentTestGitRepoPath })
+    assert.equal(pullRequestDescriptionCmd.stdout, currentTest.expectedOutputs.pullRequestDescription,
+    )
+
+    // --------
+
+    const updatePullRequestDescriptionFileName = `../output.pr-description-update.txt`
+    var calculationCommand = await exec(
+      `GITHUB_OUTPUT=\'${updatePullRequestDescriptionFileName}\' bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh update-pr ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`, {
+      env: { ...envVars, PR_DESCRIPTION: currentTest.inputs.existingPullRequestDescription },
       cwd: currentTestGitRepoPath
     })
 
     console.log(calculationCommand.stdout)
 
-    const pullRequestDescriptionCmd = await exec(`cat ${pullRequestDescriptionFileName}`, { cwd: currentTestGitRepoPath })
-    assert.equal(pullRequestDescriptionCmd.stdout, currentTest.expectedOutputs.pullRequestDescription,
+    const updatedPullRequestDescriptionCmd = await exec(`cat ${updatePullRequestDescriptionFileName}`, { cwd: currentTestGitRepoPath })
+    assert.equal(updatedPullRequestDescriptionCmd.stdout, currentTest.expectedOutputs.updatedPullRequestDescription,
     )
 
   })

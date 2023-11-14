@@ -20,11 +20,13 @@
           "GITHUB_BASE_REF": "develop",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
-        }
+        },
+        "existingPullRequestDescription": "adding new feature"
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
-        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/service1 - v0.2.0-alpha.1\\\\n\"\n"
+        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/service1 - v0.2.0-alpha.1\\\\n\"\n",
+        "updatedPullRequestDescription": "PR_BODY=\"adding new feature\\\\n## impact surface\\\\n- apps/service1 - v0.2.0-alpha.1\\\\n\"\n"
       }
     },
     {
@@ -46,13 +48,14 @@
           "GITHUB_HEAD_REF": "feat/my-feature",
           "GITHUB_BASE_REF": "develop",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy",
-          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
-          "PR_DESCRIPTION": "this is the current PR description"
-        }
+          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
+        },
+        "existingPullRequestDescription": "adding new feature \n\n[comment]: # (START semver-yeasy) \n## impact surface\n- apps/test - v0.2.0-intermediate.commit.tag.1 \n\n[comment]: # (END semver-yeasy)"
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/semver-yeasy\"\n",
-        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/semver-yeasy - v0.2.0-alpha.1\\\\n\"\n"
+        "pullRequestDescription": "PR_BODY=\"## impact surface\\\\n- apps/semver-yeasy - v0.2.0-alpha.1\\\\n\"\n",
+        "updatedPullRequestDescription": "PR_BODY=\"adding new feature \\n\\n[comment]: # (START semver-yeasy) \\n## impact surface\\n- apps/semver-yeasy - v0.2.0-alpha.1 \\n\\n[comment]: # (END semver-yeasy)\""
       }
     }
   ]
