@@ -7,6 +7,7 @@ var { ROOT_TEST_FOLDER, SEMVER_YEASY_ROOT_DIRECTORY, GITVERSION_EXEC_PATH } = pr
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`)
 
 testConfig.tests.forEach(currentTest => {
+  if (currentTest.skip || false) return;
   const currentTestPath = currentTest.name.replace(': ', '__')
   const currentTestWorkspace = `test-workspaces/${currentTestPath}`
   const currentTestGitRepoPath = `test-workspaces/${currentTestPath}/repo`
