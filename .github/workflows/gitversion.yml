@@ -39,8 +39,8 @@ jobs:
     - name: Fetch all history for all tags and branches
       run: |
         git fetch --unshallow
-        git checkout main && git checkout -
-        git checkout develop && git checkout -
+        (git checkout main && git checkout - ) || true; 
+        (git checkout develop && git checkout - ) || true; 
 
     - name: Checkout to branch
       uses: ./apps/semver-yeasy
