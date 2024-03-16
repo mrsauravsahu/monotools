@@ -13,17 +13,7 @@ on:
     - 'hotfix/**'
 
 env:
-  GITVERSION: 'gittools/gitversion:5.10.0-alpine.3.14-6.0'
   MAIN_BRANCHES: ("develop" "main")
-  GITVERSION_TAG_PROPERTY_PULL_REQUESTS: .SemVer
-  GITVERSION_TAG_PROPERTY_DEFAULT: .SemVer
-  GITVERSION_TAG_PROPERTY_DEVELOP: .SemVer
-  GITVERSION_TAG_PROPERTY_RELEASE: .SemVer
-  GITVERSION_TAG_PROPERTY_HOTFIX: .SemVer
-  GITVERSION_TAG_PROPERTY_MAIN: .MajorMinorPatch
-  GITVERSION_REPO_TYPE: MONOREPO
-  GITVERSION_CONFIG_SINGLE_APP: '/repo/.cicd/common/.gitversion.yml'
-  GITVERSION_CONFIG_MONOREPO: '/repo/apps/${svc}/.gitversion.yml'
 
 jobs:
   gitversion:
@@ -33,6 +23,19 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    #  Fixes "fatal: detected dubious ownership in repository at '/github/workspace'" in Github actions
+    - name: Prereq steps
+      run: |
+        git config --global --add safe.directory /github/workspace
+
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Install GitVersion.Tool
+      run: dotnet tool install --global GitVersion.Tool
+
     - name: Fetch all history for all tags and branches
       run: |
         git fetch --unshallow
@@ -40,31 +43,58 @@ jobs:
         git checkout develop && git checkout -
 
     - name: Checkout to branch
-      run: . ./apps/semver-yeasy/semver-yeasy.sh checkout
+      uses: ./apps/semver-yeasy
+      id: checkout
+      with:
+        repo-type: 'MONOREPO'
+        mode: 'checkout'
 
     - name: Calculate changed services
       id: calculate_changed_services
-      run: . ./apps/semver-yeasy/semver-yeasy.sh changed
+      uses: ./apps/semver-yeasy
+      with:
+        repo-type: 'MONOREPO'
+        mode: 'changed'
 
-    - name: Calculate versions
+    - name: Calculate service version calculation
       id: calculate_service_versions
+      uses: ./apps/semver-yeasy
       env:
-        SEMVERYEASY_CHANGED: ${{ steps.calculate_changed_services.outputs.changed }}
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
-      run: . ./apps/semver-yeasy/semver-yeasy.sh calculate-version
+      with:
+        repo-type: 'MONOREPO'
+        mode: 'calculate-version'
+
+    - name: Run tests
+      env:
+        SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
+        GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
+      run: |
+        services=( $SEMVERYEASY_CHANGED_SERVICES )
+        ROOT_REPO_DIR=`pwd`
+        for service in "${services[@]}"; do
+          cd "${service}/__tests__"
+          GITVERSION_EXEC_PATH="${GITVERSION_EXEC_PATH}" npm run ci:checks
+          cd ${ROOT_REPO_DIR}
+        done
 
     - name: Update PR description
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: ./apps/semver-yeasy
+      with:
+        repo-type: 'MONOREPO'
+        mode: 'update-pr'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SEMVERY_YEASY_PR_BODY: ${{ fromJSON(steps.calculate_service_versions.outputs.PR_BODY) }}
-      if: ${{ github.event_name == 'pull_request' }}
-      run: . ./apps/semver-yeasy/semver-yeasy.sh update-pr
-
 
     - name: Tag build
       if: ${{ github.event_name == 'push' && (startsWith(steps.calculate_changed_services.outputs.diff_dest, 'release') || startsWith(steps.calculate_changed_services.outputs.diff_dest, 'hotfix') || contains(env.MAIN_BRANCHES, steps.calculate_changed_services.outputs.diff_dest)) }}
+      uses: ./apps/semver-yeasy
+      with:
+        repo-type: 'MONOREPO'
+        mode: 'tag'
       env:
         DIFF_DEST: ${{ steps.calculate_changed_services.outputs.DIFF_DEST }}
         SEMVERYEASY_CHANGED: ${{ steps.calculate_changed_services.outputs.changed }}
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.calculate_changed_services.outputs.changed_services) }}
-      run: . ./apps/semver-yeasy/semver-yeasy.sh tag
