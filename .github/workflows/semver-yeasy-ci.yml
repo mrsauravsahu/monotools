@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+    paths:
+      - 'apps/semver-yeasy/**'
+    branches:
+      - develop
+      - main
+  push:
+    paths:
+      - 'apps/semver-yeasy/**'
+    branches:
+      - develop
+      - main
+      - 'release/**'
+      - 'hotfix/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.11.1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.x
+
+      - name: Install GitVersion.Tool
+        run: dotnet tool install --global GitVersion.Tool --version 5.12.0
+
+      - name: Run npm tests
+        env:
+          GITVERSION_EXEC_PATH: ${{ github.workspace }}/.dotnet/tools/dotnet-gitversion
+        run: npm t
