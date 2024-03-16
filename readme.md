@@ -14,4 +14,4 @@ Tool to version deployables in a monorepo. Uses gitversion internally to help ea
 
 ---
 
-\- Saurav Sahu
+\- Sahu, S
