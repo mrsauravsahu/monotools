@@ -66,10 +66,15 @@ changed)
         else
         changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`
         fi
-        changed_services=$(printf '%s' "$changed_services" | jq --raw-input --slurp '.')
-        echo "changed_services=$changed_services" >> $GITHUB_OUTPUT
+
+        if [ "${ENV}" != "LOCAL" ]; then
+            changed_services=$(printf '%s' "$changed_services" | jq --raw-input --slurp '.')
+        fi
+        echo "changed_services=\"$changed_services\"" >> $GITHUB_OUTPUT
         echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
     fi
+
+
 ;;
 
 calculate-version)
@@ -159,7 +164,8 @@ tag)
         git push origin "v${full_service_version}"
         fi
     else
-        for svc in "${SEMVERYEASY_CHANGED_SERVICES[@]}"; do
+        changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
+        for svc in "${changed_services[@]}"; do
         echo "calculation for ${svc}"
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml"
