@@ -1,4 +1,4 @@
-name: ci
+name: "semver-yeasy:ci"
 
 on:
   pull_request:
