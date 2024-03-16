@@ -6,7 +6,11 @@
   "main": "index.js",
   "scripts": {
     "ci:checks": "npm ci && npm t",
-    "test": "SEMVER_YEASY_ROOT_DIRECTORY=`dirname $(pwd)` ROOT_TEST_FOLDER=`pwd` uvu . tests.js"
+    "test": "SEMVER_YEASY_ROOT_DIRECTORY=`dirname $(pwd)` ROOT_TEST_FOLDER=`pwd` uvu . tests.js",
+    "lint:help": "npx @biomejs/biome --help",
+    "lint:format": "npx @biomejs/biome format --indent-style=space .",
+    "lint": "npx @biomejs/biome lint .",
+    "lint:fix": "npm run lint -- --apply && npm run lint:format -- --write"
   },
   "author": "Saurav Sahu <mrsauravsahu@outlook.com>",
   "license": "ISC",
