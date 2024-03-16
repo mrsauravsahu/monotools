@@ -40,4 +40,6 @@ jobs:
       - name: Run npm tests
         env:
           GITVERSION_EXEC_PATH: ${{ github.workspace }}/.dotnet/tools/dotnet-gitversion
-        run: npm t
+        run: |
+          cd apps/semver-yeasy/__tests__
+          npm t
