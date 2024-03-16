@@ -42,4 +42,4 @@ jobs:
           GITVERSION_EXEC_PATH: ${{ github.workspace }}/.dotnet/tools/dotnet-gitversion
         run: |
           cd apps/semver-yeasy/__tests__
-          npm t
+          npm run ci:checks
