@@ -49,7 +49,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
-          "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service", 
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
           "PR_DESCRIPTION": "this is the current PR description"
         }

@@ -3,8 +3,12 @@ import * as assert from "uvu/assert";
 import { exec } from "child-process-promise";
 import testConfig from "./config.test.json" assert { type: "json" };
 
-const { ROOT_TEST_FOLDER, SEMVER_YEASY_ROOT_DIRECTORY, GITVERSION_EXEC_PATH    ,       JQ_EXEC_PATH,} =
-  process.env;
+const {
+  ROOT_TEST_FOLDER,
+  SEMVER_YEASY_ROOT_DIRECTORY,
+  GITVERSION_EXEC_PATH,
+  JQ_EXEC_PATH,
+} = process.env;
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`);
 
 for (const currentTest of testConfig.tests) {
@@ -31,13 +35,13 @@ for (const currentTest of testConfig.tests) {
   it(`${currentTest.name}: change calculation`, async () => {
     // Test: Version calculation
     const changesFileName = "../output.changes.txt";
-    
+
     await exec(
       `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`,
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: 'LOCAL',
+          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: changesFileName,
@@ -60,7 +64,7 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: 'LOCAL',
+          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: pullRequestDescriptionFileName,
@@ -79,7 +83,7 @@ for (const currentTest of testConfig.tests) {
     );
   });
 
-  // it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
+  it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
 }
 
 it.run();
