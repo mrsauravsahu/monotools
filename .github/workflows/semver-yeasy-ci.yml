@@ -39,11 +39,5 @@ jobs:
 
       - name: Run npm tests
         env:
-          GITVERSION_EXEC_PATH: ${{ github.workspace }}/.dotnet/tools/dotnet-gitversion
-        run: |
-          set -e
-          cd apps/semver-yeasy/__tests__
-          npm run ci:checks || echo "Error occurred during npm tests, but continuing..."
-      
-      - name: Check for errors
-        run: exit ${GITHUB_JOB_EXIT_CODE:-0}
+          GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
+        run: npm --prefix apps/semver-yeasy/__tests__ run ci:checks

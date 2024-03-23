@@ -85,9 +85,9 @@ calculate-version)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
-        GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-        service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         service_versions_txt+="v${service_version}\n"
         else
         service_versions_txt+='\nNo version bump required\n'
@@ -112,7 +112,9 @@ calculate-version)
             
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")" 2>&1)
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
             service_versions_txt+="- ${svc} - v${service_version}\n"
         done
         fi
