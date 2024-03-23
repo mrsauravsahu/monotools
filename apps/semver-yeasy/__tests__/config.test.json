@@ -18,6 +18,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-feature",
           "GITHUB_BASE_REF": "develop",
+          "DIFF_DEST": "develop",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
         }
@@ -49,6 +50,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
+          "DIFF_DEST": "main",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
           "PR_DESCRIPTION": "this is the current PR description"
@@ -56,7 +58,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services=\"apps/other-service\napps/semver-yeasy\"\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.0-alpha.1\\n- apps/other-service - v0.2.0-alpha.1\\n\n"
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.0\\n- apps/other-service - v0.2.0\\n\n"
       }
     }
   ]
