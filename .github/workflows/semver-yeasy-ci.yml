@@ -37,6 +37,11 @@ jobs:
       - name: Install GitVersion.Tool
         run: dotnet tool install --global GitVersion.Tool --version 5.12.0
 
+      - name: Find dotnet-gitversion
+        run: |
+          DOTNET_GITVERSION_EXEC_PATH=$(which dotnet-gitversion) || true
+          echo "DOTNET_GITVERSION_EXEC_PATH=$DOTNET_GITVERSION_EXEC_PATH" >> $GITHUB_ENV
+        
       - name: Run npm tests
         env:
           GITVERSION_EXEC_PATH: dotnet-gitversion
