@@ -115,7 +115,8 @@ calculate-version)
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
+            # echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
+            echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
             exit_status=$?
             echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
