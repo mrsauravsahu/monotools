@@ -7,6 +7,12 @@ inputs:
   mode:
     description: 'the type of repo - "MONOREPO" or "SINGLE_APP"'
     required: true
+  DIFF_SOURCE:
+    description: 'the source ref of the changes to be processed'
+    required: false
+  DIFF_DEST:
+    description: 'the destination ref of the changes to be processed'
+    required: false
 outputs:
   changed_services:
     description: "Changed services between diff_source and diff_dest"
@@ -18,5 +24,8 @@ runs:
   using: 'composite'
   steps:
   - id: versioning
+    env:
+      DIFF_SOURCE: ${{ inputs.DIFF_SOURCE }}
+      DIFF_DEST: ${{ inputs.DIFF_DEST }}
     run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
     shell: bash
