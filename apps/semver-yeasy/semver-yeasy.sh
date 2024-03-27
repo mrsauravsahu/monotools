@@ -21,12 +21,6 @@ log () {
     fi
 }
 
-log "jq - ${JQ_EXEC_PATH}" >> $GITHUB_OUTPUT
-if [ "${JQ_EXEC_PATH}" == "" ]; then
-    JQ_EXEC_PATH='jq'
-fi
-log "jq updated path - ${JQ_EXEC_PATH}" >> $GITHUB_OUTPUT
-
 case "${mode}" in
 
 checkout)
@@ -79,7 +73,7 @@ changed)
         changed_services=(`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`)
         fi
 
-        changed_services_value=$(${JQ_EXEC_PATH} -Mc --null-input '$ARGS.positional' --args -- "${changed_services[@]}")
+        changed_services_value=$(jq -Mc --null-input '$ARGS.positional' --args -- "${changed_services[@]}")
         changed_services_output="{\"value\":${changed_services_value}}"
 
         printf 'changed_services=%s\n' "$changed_services_output" >> $GITHUB_OUTPUT
@@ -96,7 +90,7 @@ calculate-version)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         service_versions_txt+="v${service_version}\n"
         else
         service_versions_txt+='\nNo version bump required\n'
@@ -124,7 +118,7 @@ calculate-version)
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
             service_versions_txt+="- ${svc} - v${service_version}\n"
         done
         fi
@@ -134,7 +128,7 @@ calculate-version)
     PR_BODY="${service_versions_txt}"
 
     if [ "${ENV}" != "LOCAL" ]; then
-        PR_BODY=$(printf '%s' "$PR_BODY" | ${JQ_EXEC_PATH} --raw-input --slurp '.')
+        PR_BODY=$(printf '%s' "$PR_BODY" | jq --raw-input --slurp '.')
     fi
     echo "${PR_BODY}"
     echo "PR_BODY=$PR_BODY" >> $GITHUB_OUTPUT
@@ -144,7 +138,7 @@ update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
 
     # Get the existing PR description
-    PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | ${JQ_EXEC_PATH} -r '.body')
+    PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
 
     # Update the PR description
     UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
@@ -172,12 +166,12 @@ tag)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-        service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+        service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
             svc_without_prefix='v'
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
             next_commit_count=$((previous_commit_count+1))
-            version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
+            version_without_count=$(echo "${gitversion_calc}" | jq -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
             full_service_version="${version_without_count}.${next_commit_count}"
         else
             full_service_version="${service_version}"
@@ -194,12 +188,12 @@ tag)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-        service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+        service_version=$(echo "${gitversion_calc}" | jq -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | jq -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | jq -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
             next_commit_count=$((previous_commit_count+1))
-            version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
+            version_without_count=$(echo "${gitversion_calc}" | jq -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
             full_service_version="${version_without_count}.${next_commit_count}"
         else
             full_service_version="${service_version}"
