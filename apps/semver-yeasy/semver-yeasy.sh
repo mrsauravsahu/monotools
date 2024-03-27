@@ -63,19 +63,14 @@ changed)
         echo "changed=$changed" >> $GITHUB_OUTPUT
     else
         if [ "$(git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^common/' > /dev/null && echo 'common changed')" = 'common changed' ]; then
-        changed_services=`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`
+        changed_services=(`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`)
         else
-        changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`
+        changed_services=(`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`)
         fi
 
-        if [ "${ENV}" != "LOCAL" ]; then
-            changed_services=$(printf '%s' "$changed_services" | ${JQ_EXEC_PATH} --raw-input --slurp '.')
-        fi
-        echo "changed_services=\"$changed_services\"" >> $GITHUB_OUTPUT
-        echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
+        changed_services_value=$(${JQ_EXEC_PATH} -Mc --null-input '$ARGS.positional' --args -- "${changed_services[@]}")
+        cat <<< "changed_services='{\"value\":${changed_services_value}}'" >> $GITHUB_OUTPUT
     fi
-
-
 ;;
 
 calculate-version)

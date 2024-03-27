@@ -24,7 +24,7 @@
         }
       },
       "expectedOutputs": {
-        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
+        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services='{\"value\":[\"apps/service1\"]}'\n",
         "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - v0.2.0-alpha.1\\n\n"
       }
     },
@@ -57,7 +57,7 @@
         }
       },
       "expectedOutputs": {
-        "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services=\"apps/other-service\napps/semver-yeasy\"\n",
+        "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services='{\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}'\n",
         "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.0\\n- apps/other-service - v0.2.0\\n\n"
       }
     }
