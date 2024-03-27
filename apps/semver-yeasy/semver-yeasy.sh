@@ -71,7 +71,7 @@ changed)
         changed_services_value=$(${JQ_EXEC_PATH} -Mc --null-input '$ARGS.positional' --args -- "${changed_services[@]}")
         changed_services_output="{\"value\":${changed_services_value}}"
 
-        printf 'changed_services="%s"\n' "$changed_services_output" >> $GITHUB_OUTPUT
+        printf 'changed_services=%s\n' "$changed_services_output" >> $GITHUB_OUTPUT
         printf 'changed_services=%s\n' "$changed_services_output" 
     fi
 ;;
