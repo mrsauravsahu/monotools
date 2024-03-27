@@ -14,7 +14,10 @@ GITVERSION_TAG_PROPERTY_HOTFIX='.SemVer'
 GITVERSION_TAG_PROPERTY_MAIN='.MajorMinorPatch'
 GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO='$svc/.gitversion.yml'
-JQ_EXEC_PATH="${JQ_EXEC_PATH:-jq}"
+
+if [ "${JQ_EXEC_PATH}" == "" ]; then
+    JQ_EXEC_PATH=`which jq`
+fi
 
 case "${mode}" in
 
