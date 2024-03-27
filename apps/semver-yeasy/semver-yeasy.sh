@@ -115,9 +115,9 @@ calculate-version)
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            # echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
-            # exit_status=$?
-            # echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
+            echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
+            exit_status=$?
+            echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
