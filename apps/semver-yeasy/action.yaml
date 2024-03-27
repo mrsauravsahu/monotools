@@ -20,12 +20,18 @@ outputs:
   PR_BODY:
     description: "PR Body text to describe services changed between diff_source and diff_dest"
     value: ${{ steps.versioning.outputs.PR_BODY }}
+  diff_source:
+    description: ""
+    value: ${{ steps.versioning.outputs.diff_source }}
+  diff_dest:
+    description: ""
+    value: ${{ steps.versioning.outputs.changed_services }}
 runs:
   using: 'composite'
   steps:
   - id: versioning
     env:
-      DIFF_SOURCE: ${{ inputs.DIFF_SOURCE }}
-      DIFF_DEST: ${{ inputs.DIFF_DEST }}
+      DIFF_SOURCE: ${{ inputs.diff_source }}
+      DIFF_DEST: ${{ inputs.diff_dest }}
     run: bash ${{ github.action_path }}/semver-yeasy.sh ${{ inputs.mode }} ${{ inputs.repo-type }}
     shell: bash
