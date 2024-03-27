@@ -15,9 +15,17 @@ GITVERSION_TAG_PROPERTY_MAIN='.MajorMinorPatch'
 GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO='$svc/.gitversion.yml'
 
+log () {
+    if [ "${ENV}" == "DEBUG" ]; then
+        echo "$@"
+    fi
+}
+
+log "jq - ${JQ_EXEC_PATH}" >> $GITHUB_OUTPUT
 if [ "${JQ_EXEC_PATH}" == "" ]; then
-    JQ_EXEC_PATH=`which jq`
+    JQ_EXEC_PATH='jq'
 fi
+log "jq updated path - ${JQ_EXEC_PATH}" >> $GITHUB_OUTPUT
 
 case "${mode}" in
 
@@ -107,7 +115,7 @@ calculate-version)
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            # gitversion_calc=$($gitversion_calc_cmd 2>&1) >> $GITHUB_OUTPUT
+            # echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
             # exit_status=$?
             # echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
@@ -138,11 +146,11 @@ update-pr)
     PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | ${JQ_EXEC_PATH} -r '.body')
 
     # Update the PR description
-    UPDATED_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed -e '/\[comment\]: # \(START semver-yeasy\)/ {i\ $SEMVERY_YEASY_PR_BODY}' -e '/\[comment\]: # \(END semver-yeasy\)/ {a\ $SEMVERY_YEASY_PR_BODY}')
+    UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
 
-    if [[ -z "$UPDATED_DESCRIPTION" ]]; then
-        UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
-    fi
+    # if [[ -z "$UPDATED_DESCRIPTION" ]]; then
+    #     UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
+    # fi
 
     # Update the PR with the updated description
     curl -sL -X PATCH -d "{\"body\": \"$UPDATED_DESCRIPTION\" }" \
