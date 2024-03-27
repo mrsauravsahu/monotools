@@ -72,7 +72,7 @@ changed)
         changed_services_output="{\"value\":${changed_services_value}}"
 
         printf 'changed_services="%s"\n' "$changed_services_output" >> $GITHUB_OUTPUT
-        printf 'changed_services="%s"\n' "$changed_services_output" 
+        printf 'changed_services=%s\n' "$changed_services_output" 
     fi
 ;;
 
