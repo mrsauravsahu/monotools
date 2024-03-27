@@ -140,17 +140,17 @@ update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
 
     # Get the existing PR description
-    PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
+    # PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | jq -r '.body')
 
     # Update the PR description
-    UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
+    # UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
 
     # if [[ -z "$UPDATED_DESCRIPTION" ]]; then
     #     UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
     # fi
 
     # Update the PR with the updated description
-    curl -sL -X PATCH -d "{\"body\": \"$UPDATED_DESCRIPTION\" }" \
+    curl -sL -X PATCH -d "{\"body\": \"${SEMVERY_YEASY_PR_BODY}\" }" \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
         "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
