@@ -129,9 +129,6 @@ calculate-version)
     # from: https://github.com/actions/create-release/issues/64#issuecomment-638695206
     PR_BODY="${service_versions_txt}"
 
-    if [ "${ENV}" != "LOCAL" ]; then
-        PR_BODY=$(printf '%s' "$PR_BODY" | jq --raw-input --slurp '.')
-    fi
     echo "${PR_BODY}"
     echo "PR_BODY=$PR_BODY" >> $GITHUB_OUTPUT
 ;;
