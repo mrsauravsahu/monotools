@@ -144,13 +144,14 @@ update-pr)
 
     # Update the PR description
     # UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
+    UPDATED_DESCRIPTION=$(echo "$PR_DESCRIPTION")
 
     # if [[ -z "$UPDATED_DESCRIPTION" ]]; then
     #     UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
     # fi
 
     # Update the PR with the updated description
-    jq -nc "{\"body\": ${SEMVERY_YEASY_PR_BODY} }" | \
+    jq -nc "{\"body\": \"${UPDATED_DESCRIPTION}\" }" | \
         curl -sL -X PATCH -d @- \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
