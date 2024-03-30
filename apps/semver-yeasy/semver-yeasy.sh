@@ -150,7 +150,7 @@ update-pr)
     # fi
 
     # Update the PR with the updated description
-    jq -nc "{\"body\": \"${SEMVERY_YEASY_PR_BODY}\" }" | \
+    jq -nc "{\"body\": ${SEMVERY_YEASY_PR_BODY} }" | \
         curl -sL -X PATCH -d @- \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
