@@ -144,7 +144,7 @@ update-pr)
 
     # Update the PR description
     # UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
-    UPDATED_DESCRIPTION=$(echo "$PR_DESCRIPTION")
+    UPDATED_DESCRIPTION=$(echo "$SEMVERY_YEASY_PR_BODY")
 
     # if [[ -z "$UPDATED_DESCRIPTION" ]]; then
     #     UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
