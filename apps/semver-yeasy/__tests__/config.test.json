@@ -18,6 +18,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-feature",
           "GITHUB_BASE_REF": "develop",
+          "DIFF_SOURCE": "feat/my-feature",
           "DIFF_DEST": "develop",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
@@ -50,6 +51,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
+          "DIFF_SOURCE": "feat/my-features",
           "DIFF_DEST": "main",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
