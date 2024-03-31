@@ -25,7 +25,7 @@ outputs:
     value: ${{ steps.versioning.outputs.diff_source }}
   diff_dest:
     description: ""
-    value: ${{ steps.versioning.outputs.changed_services }}
+    value: ${{ steps.versioning.outputs.diff_dest }}
 runs:
   using: 'composite'
   steps:
