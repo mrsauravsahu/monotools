@@ -20,6 +20,8 @@ JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
 log () {
     if [ "${ENV}" == "DEBUG" ]; then
         echo "$@"
+    elif [ "${ENV}" == "LOCAL_DEBUG" ]; then
+        echo "$@" >> $GITHUB_OUTPUT
     fi
 }
 
@@ -109,16 +111,16 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            svc_without_apps_prefix=$(echo "${svc}" | sed "s|^apps/||")
+            svc_without_apps_prefix=$(echo "${svc}/v" | sed "s|^apps/||")
             gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}" 
-            echo "Running calculation - '${gitversion_calc_cmd}'"
+            log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            # echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
-            # echo "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
-            # exit_status=$?
-            # echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
+            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
+            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
+            exit_status=$?
+            log "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}

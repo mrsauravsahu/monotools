@@ -41,7 +41,6 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: changesFileName,
@@ -64,7 +63,6 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: pullRequestDescriptionFileName,
