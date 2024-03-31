@@ -50,10 +50,12 @@ changed)
     if [ "$(echo "${DIFF_DEST}" | grep -o '^hotfix/')" = "hotfix/" ]; then
         DIFF_SOURCE="main"
     fi
-    echo "diff_source=$DIFF_SOURCE" >> $GITHUB_OUTPUT
-    echo "diff_dest=$DIFF_DEST" >> $GITHUB_OUTPUT
-    echo "DIFF_SOURCE='$DIFF_SOURCE'"
-    echo "DIFF_DEST='$DIFF_DEST'"
+
+    printf 'diff_source=%s\n' "$DIFF_SOURCE" >> $GITHUB_OUTPUT
+    printf 'diff_dest=%s\n' "$DIFF_DEST" >> $GITHUB_OUTPUT
+
+    echo "diff_source='$DIFF_SOURCE'"
+    echo "diff_dest='$DIFF_DEST'"
 
     # setting empty outputs otherwise next steps fail during preprocessing stage
     echo "changed=''" >> $GITHUB_OUTPUT
