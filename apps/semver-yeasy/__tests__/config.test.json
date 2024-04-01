@@ -26,7 +26,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - v0.2.0-alpha.1\\n\n"
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - v0.1.0-feat-my-feature.1\\n\n"
       }
     },
     {
@@ -51,7 +51,6 @@
       ],
       "inputs": {
         "env": {
-          "ENV": "LOCAL_DEBUG",
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
@@ -64,11 +63,11 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.0\\n- apps/other-service - v0.2.0\\n\n"
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.1\\n- apps/other-service - v0.2.1\\n\n"
       }
     },
     {
-      "name": "monorepo: two services changed at different versions",
+      "name": "monorepo: two-services-changed-at-different-versions",
       "repoSetup": [
         "git checkout -b main",
         "git commit -am 'initial commit' --allow-empty",
@@ -89,7 +88,6 @@
       ],
       "inputs": {
         "env": {
-          "ENV": "LOCAL_DEBUG",
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",

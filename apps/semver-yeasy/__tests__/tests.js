@@ -15,8 +15,7 @@ await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`);
 for (const currentTest of testConfig.tests) {
   const currentTestPath = currentTest.name
     .replace(": ", "__")
-    .replace(":", "__")
-    .replace(" ", "-");
+    .replace(":", "__");
   const currentTestWorkspace = `test-workspaces/${currentTestPath}`;
   const currentTestGitRepoPath = `test-workspaces/${currentTestPath}/repo`;
 

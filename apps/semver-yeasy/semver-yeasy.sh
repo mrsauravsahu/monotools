@@ -19,8 +19,6 @@ JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
 
 log () {
     if [ "${ENV}" == "DEBUG" ]; then
-        echo "$@"
-    elif [ "${ENV}" == "LOCAL_DEBUG" ]; then
         echo "$@" >> $GITHUB_OUTPUT
     fi
 }
