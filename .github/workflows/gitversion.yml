@@ -76,18 +76,19 @@ jobs:
         repo-type: 'MONOREPO'
         mode: 'calculate-version'
 
-    - name: Run tests
-      env:
-        SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
-        GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
-      run: |
-        services=( $SEMVERYEASY_CHANGED_SERVICES )
-        ROOT_REPO_DIR=`pwd`
-        for service in "${services[@]}"; do
-          cd "${service}/__tests__"
-          GITVERSION_EXEC_PATH="${GITVERSION_EXEC_PATH}" npm run ci:checks
-          cd ${ROOT_REPO_DIR}
-        done
+    # Note: turning off tests as semver-yeasy:ci covers this
+    # - name: Run tests
+    #   env:
+    #     SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
+    #     GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
+    #   run: |
+    #     services=( $SEMVERYEASY_CHANGED_SERVICES )
+    #     ROOT_REPO_DIR=`pwd`
+    #     for service in "${services[@]}"; do
+    #       cd "${service}/__tests__"
+    #       GITVERSION_EXEC_PATH="${GITVERSION_EXEC_PATH}" npm run ci:checks
+    #       cd ${ROOT_REPO_DIR}
+    #     done
 
     - name: Update PR description
       if: ${{ github.event_name == 'pull_request' }}
