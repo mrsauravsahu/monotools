@@ -9,10 +9,13 @@ const {
   GITVERSION_EXEC_PATH,
   JQ_EXEC_PATH,
 } = process.env;
+
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`);
 
 for (const currentTest of testConfig.tests) {
-  const currentTestPath = currentTest.name.replace(": ", "__");
+  const currentTestPath = currentTest.name
+    .replace(": ", "__")
+    .replace(":", "__");
   const currentTestWorkspace = `test-workspaces/${currentTestPath}`;
   const currentTestGitRepoPath = `test-workspaces/${currentTestPath}/repo`;
 
@@ -41,7 +44,6 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: changesFileName,
@@ -64,7 +66,6 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
-          ENV: "LOCAL",
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: pullRequestDescriptionFileName,

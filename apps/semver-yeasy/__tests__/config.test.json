@@ -18,14 +18,15 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-feature",
           "GITHUB_BASE_REF": "develop",
-          "DIFF_DEST": "develop",
+          "DIFF_SOURCE": "develop",
+          "DIFF_DEST": "feat/my-feature",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml"
         }
       },
       "expectedOutputs": {
-        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services=\"apps/service1\"\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - v0.2.0-alpha.1\\n\n"
+        "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - v0.1.0-feat-my-feature.1\\n\n"
       }
     },
     {
@@ -35,6 +36,9 @@
         "git commit -am 'initial commit' --allow-empty",
         "git tag -a 'semver-yeasy/v0.1.0' -m 'semver-yeasy/v0.1.0'",
         "git tag -a 'other-service/v0.1.0' -m 'other-service/v0.1.0'",
+        "git commit -am 'second version' --allow-empty",
+        "git tag -a 'semver-yeasy/v0.2.0' -m 'semver-yeasy/v0.2.0'",
+        "git tag -a 'other-service/v0.2.0' -m 'other-service/v0.2.0'",
         "git checkout -b feat/my-features",
         "mkdir -p apps/semver-yeasy/src",
         "cp ../../../../.gitversion.yml apps/semver-yeasy",
@@ -50,15 +54,53 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
-          "DIFF_DEST": "main",
+          "DIFF_SOURCE": "main",
+          "DIFF_DEST": "feat/my-features",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
           "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
           "PR_DESCRIPTION": "this is the current PR description"
         }
       },
       "expectedOutputs": {
-        "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services=\"apps/other-service\napps/semver-yeasy\"\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.0\\n- apps/other-service - v0.2.0\\n\n"
+        "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.1\\n- apps/other-service - v0.2.1\\n\n"
+      }
+    },
+    {
+      "name": "monorepo: two-services-changed-at-different-versions",
+      "repoSetup": [
+        "git checkout -b main",
+        "git commit -am 'initial commit' --allow-empty",
+        "git tag -a 'semver-yeasy/v0.1.0' -m 'semver-yeasy/v0.1.0'",
+        "git tag -a 'other-service/v0.1.0' -m 'other-service/v0.1.0'",
+        "git commit -am 'second version' --allow-empty",
+        "git tag -a 'semver-yeasy/v0.2.0' -m 'semver-yeasy/v0.2.0'",
+
+        "git checkout -b feat/my-features",
+        "mkdir -p apps/semver-yeasy/src",
+        "cp ../../../../.gitversion.yml apps/semver-yeasy",
+        "echo \"console.log('hello world')\" > apps/semver-yeasy/src/main.js",
+        "git add apps/semver-yeasy; git commit -am 'semver-yeasy changes' --allow-empty",
+        "mkdir -p apps/other-service/src",
+        "cp ../../../../.gitversion.yml apps/other-service",
+        "echo \"console.log('hello world')\" > apps/other-service/src/main.js",
+        "git add apps/other-service; git commit -am 'other-service changes' --allow-empty"
+      ],
+      "inputs": {
+        "env": {
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "feat/my-features",
+          "GITHUB_BASE_REF": "main",
+          "DIFF_SOURCE": "main",
+          "DIFF_DEST": "feat/my-features",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
+          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
+          "PR_DESCRIPTION": "this is the current PR description"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.1\\n- apps/other-service - v0.1.1\\n\n"
       }
     }
   ]

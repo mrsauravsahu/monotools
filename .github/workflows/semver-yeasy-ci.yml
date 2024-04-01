@@ -39,5 +39,6 @@ jobs:
 
       - name: Run npm tests
         env:
+          JQ_EXEC_PATH: /usr/bin/jq
           GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
         run: npm --prefix apps/semver-yeasy/__tests__ run ci:checks

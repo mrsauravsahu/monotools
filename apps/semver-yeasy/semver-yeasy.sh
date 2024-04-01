@@ -13,8 +13,15 @@ GITVERSION_TAG_PROPERTY_RELEASE='.SemVer'
 GITVERSION_TAG_PROPERTY_HOTFIX='.SemVer'
 GITVERSION_TAG_PROPERTY_MAIN='.MajorMinorPatch'
 GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
-GITVERSION_CONFIG_MONOREPO='$svc/.gitversion.yml'
-JQ_EXEC_PATH="${JQ_EXEC_PATH:-jq}"
+GITVERSION_CONFIG_MONOREPO=${GITVERSION_CONFIG_MONOREPO:-\$svc/.gitversion.yml}
+JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
+
+
+log () {
+    if [ "${ENV}" == "DEBUG" ]; then
+        echo "$@" >> $GITHUB_OUTPUT
+    fi
+}
 
 case "${mode}" in
 
@@ -43,10 +50,12 @@ changed)
     if [ "$(echo "${DIFF_DEST}" | grep -o '^hotfix/')" = "hotfix/" ]; then
         DIFF_SOURCE="main"
     fi
-    echo "diff_source=$DIFF_SOURCE" >> $GITHUB_OUTPUT
-    echo "diff_dest=$DIFF_DEST" >> $GITHUB_OUTPUT
-    echo "DIFF_SOURCE='$DIFF_SOURCE'"
-    echo "DIFF_DEST='$DIFF_DEST'"
+
+    printf 'diff_source=%s\n' "$DIFF_SOURCE" >> $GITHUB_OUTPUT
+    printf 'diff_dest=%s\n' "$DIFF_DEST" >> $GITHUB_OUTPUT
+
+    echo "diff_source='$DIFF_SOURCE'"
+    echo "diff_dest='$DIFF_DEST'"
 
     # setting empty outputs otherwise next steps fail during preprocessing stage
     echo "changed=''" >> $GITHUB_OUTPUT
@@ -63,19 +72,17 @@ changed)
         echo "changed=$changed" >> $GITHUB_OUTPUT
     else
         if [ "$(git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^common/' > /dev/null && echo 'common changed')" = 'common changed' ]; then
-        changed_services=`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`
+        changed_services=(`ls -1 apps | xargs -n 1 printf 'apps/%s\n'`)
         else
-        changed_services=`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`
+        changed_services=(`git diff "${DIFF_SOURCE}" "${DIFF_DEST}" --name-only | grep -o '^apps/[a-zA-Z0-9-]*' | sort | uniq`)
         fi
 
-        if [ "${ENV}" != "LOCAL" ]; then
-            changed_services=$(printf '%s' "$changed_services" | ${JQ_EXEC_PATH} --raw-input --slurp '.')
-        fi
-        echo "changed_services=\"$changed_services\"" >> $GITHUB_OUTPUT
-        echo "changed_services='$(echo "$changed_services" | sed 'N;s/\n/, /g')'"
+        changed_services_value=$(${JQ_EXEC_PATH} -Mc --null-input '$ARGS.positional' --args -- "${changed_services[@]}")
+        changed_services_output="{\"value\":${changed_services_value}}"
+
+        printf 'changed_services=%s\n' "$changed_services_output" >> $GITHUB_OUTPUT
+        printf 'changed_services=%s\n' "$changed_services_output" 
     fi
-
-
 ;;
 
 calculate-version)
@@ -85,7 +92,7 @@ calculate-version)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         service_versions_txt+="v${service_version}\n"
@@ -102,18 +109,23 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE}"
+            svc_without_apps_prefix=$(echo "${svc}/v" | sed "s|^apps/||")
+            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}" 
+            log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            # gitversion_calc=$($gitversion_calc_cmd 2>&1) >> $GITHUB_OUTPUT
-            # exit_status=$?
-            # echo "Exit status: $exit_status" >> $GITHUB_OUTPUT
+            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
+            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
+            exit_status=$?
+            log "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
+            echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
             service_versions_txt+="- ${svc} - v${service_version}\n"
         done
@@ -123,9 +135,6 @@ calculate-version)
     # from: https://github.com/actions/create-release/issues/64#issuecomment-638695206
     PR_BODY="${service_versions_txt}"
 
-    if [ "${ENV}" != "LOCAL" ]; then
-        PR_BODY=$(printf '%s' "$PR_BODY" | ${JQ_EXEC_PATH} --raw-input --slurp '.')
-    fi
     echo "${PR_BODY}"
     echo "PR_BODY=$PR_BODY" >> $GITHUB_OUTPUT
 ;;
@@ -134,17 +143,19 @@ update-pr)
     PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
 
     # Get the existing PR description
-    PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | ${JQ_EXEC_PATH} -r '.body')
+    # PR_DESCRIPTION=$(curl -sL -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" | ${JQ_EXEC_PATH} -r '.body')
 
     # Update the PR description
-    UPDATED_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed -e '/\[comment\]: # \(START semver-yeasy\)/ {i\ $SEMVERY_YEASY_PR_BODY}' -e '/\[comment\]: # \(END semver-yeasy\)/ {a\ $SEMVERY_YEASY_PR_BODY}')
+    # UPDATED_DESCRIPTION="${PR_DESCRIPTION}"
+    UPDATED_DESCRIPTION=$(echo "$SEMVERY_YEASY_PR_BODY")
 
-    if [[ -z "$UPDATED_DESCRIPTION" ]]; then
-        UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
-    fi
+    # if [[ -z "$UPDATED_DESCRIPTION" ]]; then
+    #     UPDATED_DESCRIPTION="$SEMVERY_YEASY_PR_BODY"
+    # fi
 
     # Update the PR with the updated description
-    curl -sL -X PATCH -d "{\"body\": \"$UPDATED_DESCRIPTION\" }" \
+    ${JQ_EXEC_PATH} -nc "{\"body\": \"${UPDATED_DESCRIPTION}\" }" | \
+        curl -sL -X PATCH -d @- \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${GITHUB_TOKEN}" \
         "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER"
@@ -160,7 +171,7 @@ tag)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
@@ -182,7 +193,7 @@ tag)
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml")
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
