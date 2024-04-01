@@ -13,7 +13,7 @@ on:
     - 'hotfix/**'
 
 env:
-  MAIN_BRANCHES: ("develop" "main")
+  PROJECT_NAME: payobills
   GITVERSION_CONFIG_MONOREPO: '.cicd/common/.gitversion.yml'
 
 jobs:
@@ -71,6 +71,9 @@ jobs:
       id: calculate_service_versions
       uses: mrsauravsahu/monotools/apps/semver-yeasy@improv/all-json-outputs
       env:
+        GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
+        JQ_EXEC_PATH: /usr/bin/jq
+        GITVERSION_CONFIG_MONOREPO: ${{ env.GITVERSION_CONFIG_MONOREPO }}
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
       with:
         repo-type: 'MONOREPO'
