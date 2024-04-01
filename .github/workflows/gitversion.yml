@@ -67,17 +67,19 @@ jobs:
         echo "SERVICES='${SERVICES[@]}'"
         echo "SERVICES='${SERVICES[@]}'" >> $GITHUB_OUTPUT
 
-    - name: Calculate service version calculation
+    - name: Calculate versions
       id: calculate_service_versions
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@improv/all-json-outputs
       env:
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
         JQ_EXEC_PATH: /usr/bin/jq
-        GITVERSION_CONFIG_MONOREPO: ${{ env.GITVERSION_CONFIG_MONOREPO }}
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
-      with:
-        repo-type: 'MONOREPO'
-        mode: 'calculate-version'
+        GITVERSION_CONFIG_MONOREPO: ${{ env.GITVERSION_CONFIG_MONOREPO }}
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@improv/all-json-outputs
+      with: 
+        repo-type: MONOREPO
+        mode: calculate-version
+        diff_source: ${{ steps.calculate_changed_services.outputs.diff_source }}
+        diff_dest: ${{ steps.calculate_changed_services.outputs.diff_dest }}
 
     # Note: turning off tests as semver-yeasy:ci covers this
     # - name: Run tests
@@ -106,7 +108,7 @@ jobs:
         diff_dest: ${{ steps.calculate_changed_services.outputs.diff_dest }}
 
     - name: Tag build
-      if: ${{ github.event_name == 'push' && (startsWith(steps.calculate_changed_services.outputs.diff_dest, 'release') || startsWith(steps.calculate_changed_services.outputs.diff_dest, 'hotfix') || contains(env.MAIN_BRANCHES, steps.calculate_changed_services.outputs.diff_dest)) }}
+      if: ${{ github.event_name == 'push' && (startsWith(steps.calculate_changed_services.outputs.diff_dest, 'release') || startsWith(steps.calculate_changed_services.outputs.diff_dest, 'hotfix')) && steps.calculate_changed_services.outputs.changed_services != '' }}
       uses: mrsauravsahu/monotools/apps/semver-yeasy@improv/all-json-outputs
       env:
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
