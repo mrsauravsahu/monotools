@@ -95,7 +95,7 @@ calculate-version)
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
-            if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+            if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
                 GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
             fi
 
@@ -126,7 +126,7 @@ calculate-version)
             log "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-            if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+            if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
                 GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
             fi
 
@@ -181,7 +181,7 @@ tag)
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
-        if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+        if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
         fi
 
@@ -208,7 +208,7 @@ tag)
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
-        if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+        if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
         fi
 
