@@ -120,7 +120,6 @@ calculate-version)
             gitversion_calc=$($gitversion_calc_cmd)
             
             # Used for debugging
-            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)" >> $GITHUB_OUTPUT
             log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
             exit_status=$?
             log "Exit status: $exit_status" >> $GITHUB_OUTPUT
@@ -129,9 +128,9 @@ calculate-version)
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
                 GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
+                log "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
             fi
 
-            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
             echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")

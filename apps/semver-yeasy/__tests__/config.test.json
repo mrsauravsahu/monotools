@@ -102,6 +102,37 @@
         "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
         "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - v0.2.1\\n- apps/other-service - v0.1.1\\n\n"
       }
+    },
+    {
+      "name": "monorepo: one-service-push-event-on-main",
+      "repoSetup": [
+        "git checkout -b main",
+        "git commit -am 'initial commit' --allow-empty",
+        "git tag -a 'onlyservice/v0.1.0' -m 'onlyservice/v0.1.0'",
+        "git commit -am 'second version' --allow-empty",
+        "git tag -a 'onlyservice/v0.2.0' -m 'onlyservice/v0.2.0'",
+
+        "mkdir -p apps/onlyservice/src",
+        "cp ../../../../.gitversion.yml apps/onlyservice",
+        "echo \"console.log('hello world')\" > apps/onlyservice/src/main.js",
+        "git add apps/onlyservice; git commit -m 'new feature got merged'"
+      ],
+      "inputs": {
+        "env": {
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "onlyservice/v0.2.0",
+          "GITHUB_BASE_REF": "main",
+          "DIFF_SOURCE": "onlyservice/v0.2.0",
+          "DIFF_DEST": "main",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/onlyservice",
+          "GITVERSION_CONFIG_MONOREPO": "apps/$svc/.gitversion.yml",
+          "PR_DESCRIPTION": "this is the current PR description"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=main\ndiff_dest=onlyservice/v0.2.0\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/onlyservice\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/onlyservice - v0.2.1\\n\n"
+      }
     }
   ]
 }
