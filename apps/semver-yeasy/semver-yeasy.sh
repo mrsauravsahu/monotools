@@ -94,6 +94,11 @@ calculate-version)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+
+            if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+                GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+            fi
+
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         service_versions_txt+="v${service_version}\n"
         else
@@ -120,9 +125,11 @@ calculate-version)
             exit_status=$?
             log "Exit status: $exit_status" >> $GITHUB_OUTPUT
             
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_PULL_REQUESTS"
-            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+                GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+            fi
+
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
             echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
@@ -173,6 +180,11 @@ tag)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+
+        if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+        fi
+
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
             svc_without_prefix='v'
@@ -195,6 +207,11 @@ tag)
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml")
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+
+        if [ "${GITVERSION_TAG_PROPERTY_NAME}" == "GITVERSION_TAG_PROPERTY_" ]; then
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+        fi
+
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
