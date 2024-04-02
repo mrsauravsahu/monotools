@@ -96,7 +96,7 @@ calculate-version)
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-                GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+                GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
 
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -124,10 +124,11 @@ calculate-version)
             log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
             exit_status=$?
             log "Exit status: $exit_status" >> $GITHUB_OUTPUT
-            
+
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-                GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+                GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
 
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -182,7 +183,7 @@ tag)
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
         if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+            GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
         fi
 
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
@@ -209,7 +210,7 @@ tag)
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
 
         if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_DEFAULT"
+            GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
         fi
 
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
