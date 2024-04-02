@@ -92,9 +92,9 @@ calculate-version)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
+
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
                 GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
@@ -126,7 +126,7 @@ calculate-version)
             log "Exit status: $exit_status" >> $GITHUB_OUTPUT
 
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
                 GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
@@ -179,9 +179,9 @@ tag)
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
+
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-
         if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
             GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
         fi
@@ -206,9 +206,9 @@ tag)
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml")
+
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-
         if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
             GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
         fi
