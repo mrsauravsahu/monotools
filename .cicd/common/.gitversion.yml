@@ -1,5 +1,5 @@
 mode: MainLine
-tag-prefix: v
+tag-prefix: '[vV]?'
 branches:
   main:
     increment: Patch

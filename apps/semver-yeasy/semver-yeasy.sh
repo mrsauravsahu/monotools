@@ -18,6 +18,12 @@ GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO=${GITVERSION_CONFIG_MONOREPO:-\$svc/.gitversion.yml}
 JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
 
+# Check if GITVERSION_EXEC_PATH is set
+if [ -z "${GITVERSION_EXEC_PATH}" ]; then
+    echo "Error: GITVERSION_EXEC_PATH is not set. Please set the path to the GitVersion executable."
+    exit 1
+fi
+
 
 log () {
     if [ "${ENV}" == "DEBUG" ]; then
@@ -101,8 +107,13 @@ calculate-version)
                 GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
 
+            if [ -z "${gitversion_calc}" ]; then
+                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                exit 1
+            fi
+
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-        service_versions_txt+="v${service_version}\n"
+        service_versions_txt+="${service_version}\n"
         else
         service_versions_txt+='\nNo version bump required\n'
         fi
@@ -120,6 +131,11 @@ calculate-version)
             gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}" 
             log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
+
+            if [ -z "${gitversion_calc}" ]; then
+                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                exit 1
+            fi
             
             # Used for debugging
             log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
@@ -136,7 +152,7 @@ calculate-version)
             echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
             echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-            service_versions_txt+="- ${svc} - v${service_version}\n"
+            service_versions_txt+="- ${svc} - ${service_version}\n"
         done
         fi
     fi
@@ -197,8 +213,8 @@ tag)
         else
             full_service_version="${service_version}"
         fi
-        git tag -a "v${full_service_version}" -m "v${full_service_version}"
-        git push origin "v${full_service_version}"
+        git tag -a "${full_service_version}" -m "${full_service_version}"
+        git push origin "${full_service_version}"
         fi
     else
         changed_services=( $SEMVERYEASY_CHANGED_SERVICES )

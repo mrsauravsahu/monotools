@@ -39,8 +39,10 @@ for (const currentTest of testConfig.tests) {
     // Test: Version calculation
     const changesFileName = "../output.changes.txt";
 
+    const cmd = `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`
+    console.log(`Running command: ${cmd}`);
     await exec(
-      `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`,
+      cmd,
       {
         env: {
           ...currentTest.inputs.env,
@@ -61,8 +63,11 @@ for (const currentTest of testConfig.tests) {
   it(`${currentTest.name}: PR description calculation`, async () => {
     // Test: PR description calculation
     const pullRequestDescriptionFileName = "../output.pr-description.txt";
+
+    const cmd = `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`
+    console.log(`Running command: ${cmd}`);
     await exec(
-      `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`,
+      cmd,
       {
         env: {
           ...currentTest.inputs.env,
@@ -84,7 +89,7 @@ for (const currentTest of testConfig.tests) {
     );
   });
 
-  it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
+  // it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
 }
 
 it.run();
