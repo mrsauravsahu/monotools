@@ -29,10 +29,10 @@ jobs:
       run: |
         git config --global --add safe.directory /github/workspace
 
-    - name: Setup .NET 6
+    - name: Setup .NET 8
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
 
     - name: Install GitVersion.Tool
       run: dotnet tool install --global GitVersion.Tool
