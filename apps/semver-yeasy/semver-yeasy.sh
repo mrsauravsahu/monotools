@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 echo 'Monotools: semver-yeasy'
 
 mode=$1
@@ -114,7 +116,7 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            svc_without_apps_prefix=$(echo "${svc}/v" | sed "s|^apps/||")
+            svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
             gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}" 
             log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
@@ -215,15 +217,15 @@ tag)
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
             next_commit_count=$((previous_commit_count+1))
             version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
             full_service_version="${version_without_count}.${next_commit_count}"
         else
             full_service_version="${service_version}"
         fi
-        git tag -a "${svc_without_prefix}/v${full_service_version}" -m "${svc_without_prefix}/v${full_service_version}"
-        git push origin "${svc_without_prefix}/v${full_service_version}"
+        git tag -a "${svc_without_prefix}/${full_service_version}" -m "${svc_without_prefix}/${full_service_version}"
+        git push origin "${svc_without_prefix}/${full_service_version}"
         done
     fi
 ;;
@@ -234,3 +236,5 @@ tag)
 ;;
 
 esac
+
+set +x
