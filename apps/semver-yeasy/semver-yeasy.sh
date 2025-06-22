@@ -109,6 +109,7 @@ calculate-version)
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
+        CONFIG_FILE="GITVERSION_CONFIG_${repo_type}"
         ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
         gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
 

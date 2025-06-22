@@ -95,7 +95,7 @@ for (const currentTest of testConfig.tests) {
     );
   });
 
-  // it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
+  it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
 }
 
 it.run();
