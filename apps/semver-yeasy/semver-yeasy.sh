@@ -24,6 +24,17 @@ if [ -z "${GITVERSION_EXEC_PATH}" ]; then
     exit 1
 fi
 
+TAG_PREFIX="${TAG_PREFIX:-v}"
+
+# Parse --tag-prefix argument if provided
+for arg in "$@"; do
+    case $arg in
+        --tag-prefix=*)
+            TAG_PREFIX="${arg#*=}"
+            shift
+            ;;
+    esac
+done
 
 log () {
     if [ "${ENV}" == "DEBUG" ]; then
