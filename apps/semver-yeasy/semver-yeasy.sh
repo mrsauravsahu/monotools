@@ -137,6 +137,7 @@ calculate-version)
         else
         service_versions_txt="## impact surface\n"
         for svc in "${changed_services[@]}"; do
+            CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
             svc_without_apps_prefix=$(echo "${svc}" | sed "s|^apps/||")
             gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
