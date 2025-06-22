@@ -95,7 +95,12 @@ for (const currentTest of testConfig.tests) {
     );
   });
 
-  it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
+  it.after(async () => await exec(`rm -r ${currentTestWorkspace} || true`));
 }
+
+it.after(async () => {
+  // Cleanup test workspaces folder after all tests run
+  await exec(`rm -r test-workspaces || true`);
+});
 
 it.run();
