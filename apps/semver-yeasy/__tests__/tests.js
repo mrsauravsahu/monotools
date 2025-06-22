@@ -4,10 +4,12 @@ import { exec } from "child-process-promise";
 import testConfig from "./config.test.json" assert { type: "json" };
 
 const {
+  PATH,
   ROOT_TEST_FOLDER,
   SEMVER_YEASY_ROOT_DIRECTORY,
   GITVERSION_EXEC_PATH,
   JQ_EXEC_PATH,
+  DOTNET_ROOT
 } = process.env;
 
 await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`);
@@ -46,9 +48,11 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
+          PATH,
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: changesFileName,
+          ...{ [DOTNET_ROOT ? 'DOTNET_ROOT' : undefined]: DOTNET_ROOT },
         },
         cwd: currentTestGitRepoPath,
       },
@@ -71,9 +75,11 @@ for (const currentTest of testConfig.tests) {
       {
         env: {
           ...currentTest.inputs.env,
+          PATH,
           JQ_EXEC_PATH,
           GITVERSION_EXEC_PATH,
           GITHUB_OUTPUT: pullRequestDescriptionFileName,
+          ...{ [DOTNET_ROOT ? 'DOTNET_ROOT' : undefined]: DOTNET_ROOT },
         },
         cwd: currentTestGitRepoPath,
       },
