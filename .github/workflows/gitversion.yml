@@ -55,6 +55,8 @@ jobs:
     - name: Calculate changed services
       id: calculate_changed_services
       uses: mrsauravsahu/monotools/apps/semver-yeasy@fix/semver-yeasy-monorepo-service-tag-prefixes
+      env:
+        GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
       with:
         repo-type: 'MONOREPO'
         mode: 'changed'
