@@ -187,7 +187,7 @@
       "inputs": {
         "env": {
           "GITVERSION_REPO_TYPE": "SINGLE_APP",
-          "GITHUB_HEAD_REF": "0.3.1",
+          "GITHUB_HEAD_REF": "feat/new-sample-feature",
           "GITHUB_BASE_REF": "main",
           "DIFF_SOURCE": "main",
           "DIFF_DEST": "feat/new-sample-feature",
@@ -196,7 +196,7 @@
         }
       },
       "expectedOutputs": {
-        "changes": "diff_source=main\ndiff_dest=0.3.1\nchanged=''\nchanged_services=''\nchanged=true\n",
+        "changes": "diff_source=main\ndiff_dest=feat/new-sample-feature\nchanged=''\nchanged_services=''\nchanged=true\n",
         "pullRequestDescription": "PR_BODY=## version bump\\n0.3.2\\n\n"
       }
     }

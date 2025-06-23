@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# set -x
+set -x
 
 echo 'Monotools: semver-yeasy'
 
@@ -265,4 +265,4 @@ tag)
 
 esac
 
-# set +x
+set +x

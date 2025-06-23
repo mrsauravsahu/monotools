@@ -18,7 +18,7 @@ beforeAll(async () => {
 
 for (const currentTest of testConfig.tests) {
   const currentTestPath = currentTest.name
-    .replace(/(: |:|\s)/, "__")
+    .replace(/(: |:|\s)/g, "__")
 
   const currentTestWorkspace = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}`);
   const currentTestGitRepoPath = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}/repo`);
@@ -27,7 +27,6 @@ for (const currentTest of testConfig.tests) {
     beforeEach(async () => {
       await exec(`
 rm -rf ${currentTestWorkspace} > /dev/null 2>&1 || true
-mkdir -p ${currentTestWorkspace}
 mkdir -p ${currentTestGitRepoPath}
 `);
 
@@ -107,5 +106,5 @@ git config user.name 'Example'
 }
 
 afterAll(async () => {
-  await exec(`rm -r test-workspaces || true`);
+  // await exec(`rm -r test-workspaces || true`);
 });
