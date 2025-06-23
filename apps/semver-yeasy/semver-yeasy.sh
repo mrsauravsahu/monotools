@@ -106,7 +106,7 @@ changed)
 
 calculate-version)
     CONFIG_FILE_VAR="GITVERSION_CONFIG_${repo_type}"
-    if [ "GITHUB_EVENT_NAME" == 'pull_request' ]; then
+    if [ "${GITHUB_EVENT_NAME}" == 'pull_request' ]; then
         GITVERSION_OPTIONS="/branch ${DIFF_DEST}"
     else
         GITVERSION_OPTIONS=''
