@@ -9,7 +9,7 @@ branches:
     regex: ^(feat|fix|improv|chore)[/-]
     increment: Patch
   hotfix:
-    tag: hotfix
+    regex: ^(hotfix)[/-]
     increment: Patch
   unknown:
     label: '{BranchName}'
