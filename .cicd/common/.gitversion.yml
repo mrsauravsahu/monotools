@@ -11,3 +11,7 @@ branches:
   hotfix:
     tag: hotfix
     increment: Patch
+  unknown:
+    label: '{BranchName}'
+    increment: Patch
+    regex: (?<BranchName>.+)
