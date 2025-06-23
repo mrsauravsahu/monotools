@@ -1,90 +1,110 @@
-import { test as it } from "uvu";
-import * as assert from "uvu/assert";
 import { exec } from "child-process-promise";
-import testConfig from "./config.test.json" assert { type: "json" };
+import testConfig from "./config.test.json" with { type: "json" };
+import * as path from "path";
 
 const {
-  ROOT_TEST_FOLDER,
-  SEMVER_YEASY_ROOT_DIRECTORY,
+  PATH,
   GITVERSION_EXEC_PATH,
   JQ_EXEC_PATH,
+  DOTNET_ROOT
 } = process.env;
 
-await exec(`rm -rf ${ROOT_TEST_FOLDER}/test-workspaces || true`);
+const SEMVER_YEASY_PATH = path.resolve(`${process.cwd()}/../`)
+const MONOTOOLS_PATH = path.resolve(`${process.cwd()}/../../../`)
+
+beforeAll(async () => {
+  await exec(`rm -rf test-workspaces || true`);
+});
 
 for (const currentTest of testConfig.tests) {
   const currentTestPath = currentTest.name
-    .replace(": ", "__")
-    .replace(":", "__");
-  const currentTestWorkspace = `test-workspaces/${currentTestPath}`;
-  const currentTestGitRepoPath = `test-workspaces/${currentTestPath}/repo`;
+    .replace(/(: |:|\s)/g, "__")
 
-  it.before(async () => {
-    await exec(`
-    mkdir -p ${ROOT_TEST_FOLDER}/${currentTestWorkspace}
-    mkdir -p ${ROOT_TEST_FOLDER}/${currentTestGitRepoPath}
+  const currentTestWorkspace = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}`);
+  const currentTestGitRepoPath = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}/repo`);
 
-    cd ${currentTestGitRepoPath}
-    git config --global user.email 'example@example.com'
-    git config --global user.name 'Example'
-    git init
-    `);
+  describe(currentTest.name, () => {
+    beforeEach(async () => {
+      await exec(`
+rm -rf ${currentTestWorkspace} > /dev/null 2>&1 || true
+mkdir -p ${currentTestGitRepoPath}
+`);
 
-    for (const setupStep of currentTest.repoSetup) {
-      await exec(setupStep, { cwd: currentTestGitRepoPath });
-    }
-  });
+      await exec(`
+git init
+git config user.email 'example@example.com'
+git config user.name 'Example'
+`, { cwd: currentTestGitRepoPath });
 
-  it(`${currentTest.name}: change calculation`, async () => {
-    // Test: Version calculation
-    const changesFileName = "../output.changes.txt";
-
-    await exec(
-      `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`,
-      {
-        env: {
-          ...currentTest.inputs.env,
-          JQ_EXEC_PATH,
-          GITVERSION_EXEC_PATH,
-          GITHUB_OUTPUT: changesFileName,
-        },
-        cwd: currentTestGitRepoPath,
-      },
-    );
-
-    const changesCmd = await exec(`cat ${changesFileName}`, {
-      cwd: currentTestGitRepoPath,
+      for (const setupStep of currentTest.repoSetup) {
+        await exec(setupStep, { env: { MONOTOOLS_PATH }, cwd: currentTestGitRepoPath });
+      }
     });
-    assert.equal(changesCmd.stdout, currentTest.expectedOutputs.changes);
-  });
 
-  it(`${currentTest.name}: PR description calculation`, async () => {
-    // Test: PR description calculation
-    const pullRequestDescriptionFileName = "../output.pr-description.txt";
-    await exec(
-      `bash ${SEMVER_YEASY_ROOT_DIRECTORY}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`,
-      {
-        env: {
-          ...currentTest.inputs.env,
-          JQ_EXEC_PATH,
-          GITVERSION_EXEC_PATH,
-          GITHUB_OUTPUT: pullRequestDescriptionFileName,
+    test("change calculation", async () => {
+      const changesFileName = path.resolve(`${currentTestWorkspace}/output.changes.txt`);
+      const cmd = `bash ${SEMVER_YEASY_PATH}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`;
+      // console.log(`Running command: ${cmd}`);
+      await exec(
+        cmd,
+        {
+          env: {
+            ...currentTest.inputs.env,
+            PATH,
+            JQ_EXEC_PATH,
+            GITVERSION_EXEC_PATH,
+            SEMVER_YEASY_PATH,
+            MONOTOOLS_PATH,
+            GITHUB_OUTPUT: changesFileName,
+            ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+          },
+          cwd: currentTestGitRepoPath,
+          shell: "/bin/bash"
         },
+      );
+
+      const changesCmd = await exec(`cat ${changesFileName}`, {
         cwd: currentTestGitRepoPath,
-      },
-    );
+      });
 
-    const pullRequestDescriptionCmd = await exec(
-      `cat ${pullRequestDescriptionFileName}`,
-      { cwd: currentTestGitRepoPath },
-    );
-    assert.equal(
-      pullRequestDescriptionCmd.stdout,
-      currentTest.expectedOutputs.pullRequestDescription,
-    );
+      expect(changesCmd.stdout).toBe(currentTest.expectedOutputs.changes);
+    });
+
+    test("PR description calculation", async () => {
+      const pullRequestDescriptionFileName = path.resolve(`${currentTestWorkspace}/output.pr-description.txt`);
+      const cmd = `bash ${SEMVER_YEASY_PATH}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`;
+      // console.log(`Running command: ${cmd}`);
+      await exec(
+        cmd,
+        {
+          env: {
+            ...currentTest.inputs.env,
+            PATH,
+            JQ_EXEC_PATH,
+            GITVERSION_EXEC_PATH,
+            SEMVER_YEASY_PATH,
+            MONOTOOLS_PATH,
+            GITHUB_OUTPUT: pullRequestDescriptionFileName,
+            ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+          },
+          cwd: currentTestGitRepoPath,
+          shell: "/bin/bash"
+        },
+      );
+
+      const pullRequestDescriptionCmd = await exec(
+        `cat ${pullRequestDescriptionFileName}`,
+        { cwd: currentTestGitRepoPath, shell: "/bin/bash" },
+
+      );
+
+      expect(pullRequestDescriptionCmd.stdout).toBe(
+        currentTest.expectedOutputs.pullRequestDescription,
+      );
+    });
   });
-
-  it.after(async () => await exec(`rm -r ${currentTestWorkspace}`));
 }
 
-it.run();
+afterAll(async () => {
+  // await exec(`rm -r test-workspaces || true`);
+});

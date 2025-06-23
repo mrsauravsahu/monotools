@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 echo 'Monotools: semver-yeasy'
 
 mode=$1
@@ -16,6 +18,23 @@ GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO=${GITVERSION_CONFIG_MONOREPO:-\$svc/.gitversion.yml}
 JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
 
+# Check if GITVERSION_EXEC_PATH is set
+if [ -z "${GITVERSION_EXEC_PATH}" ]; then
+    echo "Error: GITVERSION_EXEC_PATH is not set. Please set the path to the GitVersion executable."
+    exit 1
+fi
+
+TAG_PREFIX="${TAG_PREFIX:-v}"
+
+# Parse --tag-prefix argument if provided
+for arg in "$@"; do
+    case $arg in
+        --tag-prefix=*)
+            TAG_PREFIX="${arg#*=}"
+            shift
+            ;;
+    esac
+done
 
 log () {
     if [ "${ENV}" == "DEBUG" ]; then
@@ -87,11 +106,14 @@ changed)
 
 calculate-version)
     CONFIG_FILE_VAR="GITVERSION_CONFIG_${repo_type}"
+    GITVERSION_OPTIONS="/b ${DIFF_DEST}"
+
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
+        CONFIG_FILE="${!CONFIG_FILE_VAR}"
+        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}"
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE} ${GITVERSION_OPTIONS}")
 
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -99,8 +121,13 @@ calculate-version)
                 GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
             fi
 
+            if [ -z "${gitversion_calc}" ]; then
+                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                exit 1
+            fi
+
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-        service_versions_txt+="v${service_version}\n"
+        service_versions_txt+="${service_version}\n"
         else
         service_versions_txt+='\nNo version bump required\n'
         fi
@@ -114,10 +141,15 @@ calculate-version)
         for svc in "${changed_services[@]}"; do
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            svc_without_apps_prefix=$(echo "${svc}/v" | sed "s|^apps/||")
-            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}" 
+            svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
+            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
             log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
+
+            if [ -z "${gitversion_calc}" ]; then
+                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                exit 1
+            fi
             
             # Used for debugging
             log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
@@ -134,7 +166,7 @@ calculate-version)
             echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
             echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
             service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-            service_versions_txt+="- ${svc} - v${service_version}\n"
+            service_versions_txt+="- ${svc} - ${service_version}\n"
         done
         fi
     fi
@@ -176,8 +208,8 @@ tag)
     git config --global user.name 'github-actions'
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
-        ${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${CONFIG_FILE}")
+        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}"
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}")
 
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -195,16 +227,16 @@ tag)
         else
             full_service_version="${service_version}"
         fi
-        git tag -a "v${full_service_version}" -m "v${full_service_version}"
-        git push origin "v${full_service_version}"
+        git tag -a "${full_service_version}" -m "${full_service_version}"
+        git push origin "${full_service_version}"
         fi
     else
         changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
         for svc in "${changed_services[@]}"; do
         echo "calculation for ${svc}"
         CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-        ${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /config "${svc}/.gitversion.yml")
+        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${svc}/.gitversion.yml"
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${svc}/.gitversion.yml")
 
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -215,15 +247,15 @@ tag)
         service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
         svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
         if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/v$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
             next_commit_count=$((previous_commit_count+1))
             version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
             full_service_version="${version_without_count}.${next_commit_count}"
         else
             full_service_version="${service_version}"
         fi
-        git tag -a "${svc_without_prefix}/v${full_service_version}" -m "${svc_without_prefix}/v${full_service_version}"
-        git push origin "${svc_without_prefix}/v${full_service_version}"
+        git tag -a "${svc_without_prefix}/${full_service_version}" -m "${svc_without_prefix}/${full_service_version}"
+        git push origin "${svc_without_prefix}/${full_service_version}"
         done
     fi
 ;;
@@ -234,3 +266,5 @@ tag)
 ;;
 
 esac
+
+set +x
