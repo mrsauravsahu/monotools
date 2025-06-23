@@ -12,9 +12,6 @@ const {
 const SEMVER_YEASY_PATH = path.resolve(`${process.cwd()}/../`)
 const MONOTOOLS_PATH = path.resolve(`${process.cwd()}/../../../`)
 
-// throw new Error("loc: "+SEMVER_YEASY_PATH)
-// throw new Error("mono: "+MONOTOOLS_PATH)
-
 beforeAll(async () => {
   await exec(`rm -rf test-workspaces || true`);
 });
@@ -29,17 +26,19 @@ for (const currentTest of testConfig.tests) {
   describe(currentTest.name, () => {
     beforeAll(async () => {
       await exec(`
-        mkdir -p ${currentTestWorkspace}
-        mkdir -p ${currentTestGitRepoPath}
+mkdir -p ${currentTestWorkspace}
+mkdir -p ${currentTestGitRepoPath}
+`);
 
-        cd ${currentTestGitRepoPath}
-        git config --global user.email 'example@example.com'
-        git config --global user.name 'Example'
-        git init
-      `);
+      await exec(`
+git init
+git config user.email 'example@example.com'
+git config user.name 'Example'
+`, { cwd: currentTestGitRepoPath });
+
 
       for (const setupStep of currentTest.repoSetup) {
-        await exec(setupStep, { cwd: currentTestGitRepoPath });
+        await exec(setupStep, { env: { MONOTOOLS_PATH }, cwd: currentTestGitRepoPath });
       }
     });
 
@@ -56,16 +55,19 @@ for (const currentTest of testConfig.tests) {
             JQ_EXEC_PATH,
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
+            MONOTOOLS_PATH,
             GITHUB_OUTPUT: changesFileName,
             ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
           },
           cwd: currentTestGitRepoPath,
+          shell: "/bin/bash"
         },
       );
 
       const changesCmd = await exec(`cat ${changesFileName}`, {
         cwd: currentTestGitRepoPath,
       });
+
       expect(changesCmd.stdout).toBe(currentTest.expectedOutputs.changes);
     });
 
@@ -82,16 +84,19 @@ for (const currentTest of testConfig.tests) {
             JQ_EXEC_PATH,
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
+            MONOTOOLS_PATH,
             GITHUB_OUTPUT: pullRequestDescriptionFileName,
             ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
           },
           cwd: currentTestGitRepoPath,
+          shell: "/bin/bash"
         },
       );
 
       const pullRequestDescriptionCmd = await exec(
         `cat ${pullRequestDescriptionFileName}`,
-        { cwd: currentTestGitRepoPath },
+        { cwd: currentTestGitRepoPath, shell: "/bin/bash" },
+
       );
 
       expect(pullRequestDescriptionCmd.stdout).toBe(
