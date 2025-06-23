@@ -1,4 +1,4 @@
-mode: MainLine
+mode: ContinuousDeployment
 tag-prefix: '[vV]?'
 branches:
   main:
