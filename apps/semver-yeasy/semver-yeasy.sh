@@ -106,18 +106,14 @@ changed)
 
 calculate-version)
     CONFIG_FILE_VAR="GITVERSION_CONFIG_${repo_type}"
-    if [ "${GITHUB_EVENT_NAME}" == 'pull_request' ]; then
-        GITVERSION_OPTIONS="/b ${DIFF_DEST}"
-    else
-        GITVERSION_OPTIONS=''
-    fi
+    GITVERSION_OPTIONS="/b ${DIFF_DEST}"
 
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         service_versions_txt='## version bump\n'
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         CONFIG_FILE="${!CONFIG_FILE_VAR}"
-        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE} ${GITVERSION_OPTIONS}"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}" "${GITVERSION_OPTIONS}")
+        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}"
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE} ${GITVERSION_OPTIONS}")
 
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -146,7 +142,7 @@ calculate-version)
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
             svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
-            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix} ${GITVERSION_OPTIONS}"
+            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
             log "Running calculation - '${gitversion_calc_cmd}'"
             gitversion_calc=$($gitversion_calc_cmd)
 
