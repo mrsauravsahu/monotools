@@ -7,9 +7,7 @@ branches:
     increment: None
   feature:
     regex: ^(feat|fix|improv|chore)[/-]
-    commit-message-incrementing: Enabled
-    tag: alpha
-    increment: Minor
+    increment: Patch
   hotfix:
     tag: hotfix
     increment: Patch

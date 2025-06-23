@@ -167,7 +167,7 @@
       }
     },
     {
-      "name": "single-app: next-version",
+      "name": "single-app: version calculation from feature branch",
       "repoSetup": [
         "git checkout -b main",
         "git commit -am 'initial commit' --allow-empty",
@@ -178,6 +178,7 @@
         "git tag -a '0.3.0' -m '0.3.0'",
         "git commit -am 'third minor bump' --allow-empty",
         "git tag -a '0.3.1' -m '0.3.1'",
+        "git checkout -b feat/new-sample-feature",
         "mkdir src",
         "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml ./",
         "echo \"console.log('hello world')\" > ./src/main.js",
@@ -188,8 +189,8 @@
           "GITVERSION_REPO_TYPE": "SINGLE_APP",
           "GITHUB_HEAD_REF": "0.3.1",
           "GITHUB_BASE_REF": "main",
-          "DIFF_SOURCE": "0.3.1",
-          "DIFF_DEST": "main",
+          "DIFF_SOURCE": "main",
+          "DIFF_DEST": "feat/new-sample-feature",
           "SEMVERYEASY_CHANGED": "true",
           "PR_DESCRIPTION": "this is the current PR description"
         }

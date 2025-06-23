@@ -24,8 +24,9 @@ for (const currentTest of testConfig.tests) {
   const currentTestGitRepoPath = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}/repo`);
 
   describe(currentTest.name, () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       await exec(`
+rm -rf ${currentTestWorkspace} > /dev/null 2>&1 || true
 mkdir -p ${currentTestWorkspace}
 mkdir -p ${currentTestGitRepoPath}
 `);
@@ -35,7 +36,6 @@ git init
 git config user.email 'example@example.com'
 git config user.name 'Example'
 `, { cwd: currentTestGitRepoPath });
-
 
       for (const setupStep of currentTest.repoSetup) {
         await exec(setupStep, { env: { MONOTOOLS_PATH }, cwd: currentTestGitRepoPath });
