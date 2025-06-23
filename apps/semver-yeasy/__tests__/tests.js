@@ -98,13 +98,9 @@ for (const currentTest of testConfig.tests) {
         currentTest.expectedOutputs.pullRequestDescription,
       );
     });
-
-    afterAll(async () => {
-      // await exec(`rm -r ${currentTestWorkspace} || true`);
-    });
   });
 }
 
 afterAll(async () => {
-  // await exec(`rm -r test-workspaces || true`);
+  await exec(`rm -r test-workspaces || true`);
 });
