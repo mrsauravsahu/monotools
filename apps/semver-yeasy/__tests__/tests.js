@@ -106,5 +106,5 @@ git config user.name 'Example'
 }
 
 afterAll(async () => {
-  // await exec(`rm -r test-workspaces || true`);
+  await exec(`rm -r test-workspaces || true`);
 });

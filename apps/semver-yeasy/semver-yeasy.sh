@@ -136,39 +136,39 @@ calculate-version)
         service_versions_txt='## impact surface\n'
         changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
         if [ "${#changed_services[@]}" = "0" ]; then
-        service_versions_txt+='No services changed\n'
+            service_versions_txt+='No services changed\n'
         else
-        service_versions_txt="## impact surface\n"
-        for svc in "${changed_services[@]}"; do
-            CONFIG_FILE="${!CONFIG_FILE_VAR}"
-            CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
-            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
-            log "Running calculation - '${gitversion_calc_cmd}'"
-            gitversion_calc=$($gitversion_calc_cmd)
+            service_versions_txt="## impact surface\n"
+            for svc in "${changed_services[@]}"; do
+                CONFIG_FILE="${!CONFIG_FILE_VAR}"
+                CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
+                svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
+                gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
+                log "Running calculation - '${gitversion_calc_cmd}'"
+                gitversion_calc=$($gitversion_calc_cmd)
 
-            if [ -z "${gitversion_calc}" ]; then
-                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
-                exit 1
-            fi
-            
-            # Used for debugging
-            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
-            exit_status=$?
-            log "Exit status: $exit_status" >> $GITHUB_OUTPUT
+                if [ -z "${gitversion_calc}" ]; then
+                    echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                    exit 1
+                fi
+                
+                # Used for debugging
+                log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
+                exit_status=$?
+                log "Exit status: $exit_status" >> $GITHUB_OUTPUT
 
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-                GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
-                log "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
-            fi
+                GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+                GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+                if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
+                    GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
+                    log "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
+                fi
 
-            echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
-            echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
-            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-            service_versions_txt+="- ${svc} - ${service_version}\n"
-        done
+                echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
+                echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
+                service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+                service_versions_txt+="- ${svc} - ${service_version}\n"
+            done
         fi
     fi
     # fix multiline variables
