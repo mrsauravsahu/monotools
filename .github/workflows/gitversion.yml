@@ -35,7 +35,7 @@ jobs:
         dotnet-version: 8.x
 
     - name: Install GitVersion.Tool
-      run: dotnet tool install --global GitVersion.Tool
+      run: dotnet tool install --global GitVersion.Tool --version 5.12.0
 
     - name: Fetch all history for all tags and branches
       run: |
