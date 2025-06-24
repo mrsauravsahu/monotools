@@ -56,7 +56,8 @@ checkout)
 changed)
     if [ "${GITHUB_EVENT_NAME}" = 'push' ]; then
         DIFF_DEST="${GITHUB_REF_NAME}"
-        DIFF_SOURCE=$(git rev-parse "${DIFF_DEST}"^1)
+        # DIFF_SOURCE=$(git rev-parse "${DIFF_DEST}"^1)
+        DIFF_SOURCE="${DIFF_DEST}^"
     else
         DIFF_DEST="${GITHUB_HEAD_REF}"
         DIFF_SOURCE="${GITHUB_BASE_REF}"

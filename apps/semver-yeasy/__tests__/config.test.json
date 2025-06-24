@@ -199,6 +199,49 @@
         "changes": "diff_source=main\ndiff_dest=feat/new-sample-feature\nchanged=''\nchanged_services=''\nchanged=true\n",
         "pullRequestDescription": "PR_BODY=## version bump\\n0.3.2\\n\n"
       }
+    },
+    {
+      "name": "monorepo: one-service-changed-after-pr-merge",
+      "repoSetup": [
+        "git checkout -b main",
+        "git commit -am 'initial commit' --allow-empty",
+        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml ./",
+        "git add .gitversion.yml",
+        "git commit -m 'add gitversion config'",
+        "mkdir -p ./apps/service1/src",
+        "echo service1 > apps/service1/README.md",
+        "git add apps",
+        "git commit -am 'service1 first version'",
+        "git tag -a 'service1/0.1.0' -m 'service1/0.1.0'",
+        "git commit -am 'second version' --allow-empty",
+        "git tag -a 'service1/0.2.0' -m 'service1/0.2.0'",
+        "mkdir ./apps/service2/",
+        "echo service2 > apps/service2/README.md",
+        "git add apps/service2",
+        "git commit -am 'first version of service2'",
+        "git tag -a 'service2/0.1.0' -m 'service2/0.1.0'",
+        "git commit -am 'third version of service1' --allow-empty",
+        "git tag -a 'service1/0.3.0' -m 'service1/0.3.0'",
+        "echo \"console.log('hello world')\" > ./apps/service1/src/main.js",
+        "git add .; git commit -m 'next version changes'"
+      ],
+      "inputs": {
+        "env": {
+          "GITHUB_EVENT_NAME": "push",
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "feat/new-sample-feature",
+          "GITHUB_BASE_REF": "main",
+          "GITHUB_REF_NAME": "main",
+          "DIFF_SOURCE": "main^",
+          "DIFF_DEST": "main",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
+          "PR_DESCRIPTION": "this is the current PR description"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=main^\ndiff_dest=main\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.3.1\\n\n"
+      }
     }
   ]
 }
