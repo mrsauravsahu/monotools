@@ -11,6 +11,3 @@ branches:
   hotfix:
     regex: ^(hotfix)[/-]
     increment: Patch
-  unknown:
-    increment: Patch
-    regex: (?<BranchName>.+)
