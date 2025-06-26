@@ -18,27 +18,53 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [latest]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: 'Setup jq'
+        if: matrix.os == 'macos-latest'
+        uses: dcarbone/install-jq-action@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.11.1
+          node-version: 20.18.1
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.x
+          dotnet-version: 8.0.411
+
+      - name: Set DOTNET_ROOT and update PATH
+        shell: bash
+        run: |
+          if [ "$(uname)" = "Darwin" ]; then
+            echo "DOTNET_ROOT=/Users/runner/.dotnet/sdk/8.0.411/" >> $GITHUB_ENV
+            echo "/usr/local/share/dotnet" >> $GITHUB_PATH
+            echo "/Users/runner/.dotnet/tools" >> $GITHUB_PATH
+          else
+            echo "DOTNET_ROOT=/home/runner/.dotnet" >> $GITHUB_ENV
+            echo "/home/runner/.dotnet" >> $GITHUB_PATH
+            echo "/home/runner/.dotnet/tools" >> $GITHUB_PATH
+          fi
 
       - name: Install GitVersion.Tool
-        run: dotnet tool install --global GitVersion.Tool --version 5.12.0
-
-      - name: Run npm tests
+        working-directory: apps/semver-yeasy
+        run: dotnet tool install GitVersion.Tool --version 5.12.0 --create-manifest-if-needed
+        
+      - name: Run CI checks
+        working-directory: apps/semver-yeasy/__tests__
         env:
-          JQ_EXEC_PATH: /usr/bin/jq
-          GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
-        run: npm --prefix apps/semver-yeasy/__tests__ run ci:checks
+          JQ_EXEC_PATH: ${{ matrix.os == 'macos-latest' && 'jq' || '/usr/bin/jq' }}
+          GITVERSION_EXEC_PATH: 'dotnet dotnet-gitversion'
+        run: |
+          dotnet --info
+          npm i
+          npm t

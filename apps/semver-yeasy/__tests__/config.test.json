@@ -5,7 +5,7 @@
       "repoSetup": [
         "git checkout -b main",
         "mkdir -p apps/service1/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/service1",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/service1",
         "git commit -am 'initial commit' --allow-empty",
         "git tag -a 'semver-yeasy/0.1.0' -m 'semver-yeasy/0.1.0'",
         "git checkout -b develop",
@@ -26,7 +26,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.1.0-feat-my-feature.1\\n\n"
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.1.0\\n\n"
       }
     },
     {
@@ -41,17 +41,18 @@
         "git tag -a 'other-service/0.2.0' -m 'other-service/0.2.0'",
         "git checkout -b feat/my-features",
         "mkdir -p apps/semver-yeasy/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/semver-yeasy",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/semver-yeasy",
         "echo \"console.log('hello world')\" > apps/semver-yeasy/src/main.js",
         "git add apps/semver-yeasy; git commit -am 'semver-yeasy changes' --allow-empty",
         "mkdir -p apps/other-service/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/other-service",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/other-service",
         "echo \"console.log('hello world')\" > apps/other-service/src/main.js",
         "git add apps/other-service; git commit -am 'other-service changes' --allow-empty"
       ],
       "inputs": {
         "env": {
           "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_EVENT_NAME": "pull_request",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
           "DIFF_SOURCE": "main",
@@ -77,11 +78,11 @@
         "git tag -a 'semver-yeasy/0.2.0' -m 'semver-yeasy/0.2.0'",
         "git checkout -b feat/my-features",
         "mkdir -p apps/semver-yeasy/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/semver-yeasy",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/semver-yeasy",
         "echo \"console.log('hello world')\" > apps/semver-yeasy/src/main.js",
         "git add apps/semver-yeasy; git commit -am 'semver-yeasy changes' --allow-empty",
         "mkdir -p apps/other-service/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/other-service",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/other-service",
         "echo \"console.log('hello world')\" > apps/other-service/src/main.js",
         "git add apps/other-service; git commit -am 'other-service changes' --allow-empty"
       ],
@@ -90,6 +91,7 @@
           "GITVERSION_REPO_TYPE": "MONOREPO",
           "GITHUB_HEAD_REF": "feat/my-features",
           "GITHUB_BASE_REF": "main",
+          "GITHUB_EVENT_NAME": "pull_request",
           "DIFF_SOURCE": "main",
           "DIFF_DEST": "feat/my-features",
           "SEMVERYEASY_CHANGED_SERVICES": "apps/semver-yeasy\napps/other-service",
@@ -111,7 +113,7 @@
         "git commit -am 'second version' --allow-empty",
         "git tag -a 'onlyservice/0.2.0' -m 'onlyservice/0.2.0'",
         "mkdir -p apps/onlyservice/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/onlyservice",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/onlyservice",
         "echo \"console.log('hello world')\" > apps/onlyservice/src/main.js",
         "git add apps/onlyservice; git commit -m 'new feature got merged'"
       ],
@@ -145,7 +147,7 @@
         "git commit -am 'third minor bump' --allow-empty",
         "git tag -a 'onlyservice/0.3.1' -m 'onlyservice/0.3.1'",
         "mkdir -p apps/onlyservice/src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml apps/onlyservice",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml apps/onlyservice",
         "echo \"console.log('hello world')\" > apps/onlyservice/src/main.js",
         "git add apps/onlyservice; git commit -m 'new feature got merged'"
       ],
@@ -180,7 +182,7 @@
         "git tag -a '0.3.1' -m '0.3.1'",
         "git checkout -b feat/new-sample-feature",
         "mkdir src",
-        "cp ${MONOTOOLS_PATH}/.cicd/common/.gitversion.yml ./",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml ./",
         "echo \"console.log('hello world')\" > ./src/main.js",
         "git add .; git commit -m 'new feature got merged'"
       ],
@@ -198,6 +200,49 @@
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/new-sample-feature\nchanged=''\nchanged_services=''\nchanged=true\n",
         "pullRequestDescription": "PR_BODY=## version bump\\n0.3.2\\n\n"
+      }
+    },
+    {
+      "name": "monorepo: one-service-changed-after-pr-merge",
+      "repoSetup": [
+        "git checkout -b main",
+        "git commit -am 'initial commit' --allow-empty",
+        "cp ${SEMVER_YEASY_PATH}/__tests__/.gitversion.yml ./",
+        "git add .gitversion.yml",
+        "git commit -m 'add gitversion config'",
+        "mkdir -p ./apps/service1/src",
+        "echo service1 > apps/service1/README.md",
+        "git add apps",
+        "git commit -am 'service1 first version'",
+        "git tag -a 'service1/0.1.0' -m 'service1/0.1.0'",
+        "git commit -am 'second version' --allow-empty",
+        "git tag -a 'service1/0.2.0' -m 'service1/0.2.0'",
+        "mkdir ./apps/service2/",
+        "echo service2 > apps/service2/README.md",
+        "git add apps/service2",
+        "git commit -am 'first version of service2'",
+        "git tag -a 'service2/0.1.0' -m 'service2/0.1.0'",
+        "git commit -am 'third version of service1' --allow-empty",
+        "git tag -a 'service1/0.3.0' -m 'service1/0.3.0'",
+        "echo \"console.log('hello world')\" > ./apps/service1/src/main.js",
+        "git add .; git commit -m 'next version changes'"
+      ],
+      "inputs": {
+        "env": {
+          "GITHUB_EVENT_NAME": "push",
+          "GITVERSION_REPO_TYPE": "MONOREPO",
+          "GITHUB_HEAD_REF": "feat/new-sample-feature",
+          "GITHUB_BASE_REF": "main",
+          "GITHUB_REF_NAME": "main",
+          "DIFF_SOURCE": "main^",
+          "DIFF_DEST": "main",
+          "SEMVERYEASY_CHANGED_SERVICES": "apps/service1",
+          "PR_DESCRIPTION": "this is the current PR description"
+        }
+      },
+      "expectedOutputs": {
+        "changes": "diff_source=main^\ndiff_dest=main\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
+        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.3.1\\n\n"
       }
     }
   ]

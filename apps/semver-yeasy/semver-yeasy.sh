@@ -8,15 +8,17 @@ mode=$1
 repo_type="$(echo $2 | tr '[[:lower:]]' '[[:upper:]]')"
 
 # TODO: To complete this, check if if conditions use these env vars in the workflow 
-GITVERSION_TAG_PROPERTY_PULL_REQUESTS='.SemVer'
-GITVERSION_TAG_PROPERTY_DEFAULT='.SemVer'
-GITVERSION_TAG_PROPERTY_DEVELOP='.SemVer'
-GITVERSION_TAG_PROPERTY_RELEASE='.SemVer'
-GITVERSION_TAG_PROPERTY_HOTFIX='.SemVer'
+GITVERSION_TAG_PROPERTY_PULL_REQUESTS='.MajorMinorPatch'
+GITVERSION_TAG_PROPERTY_DEFAULT='.MajorMinorPatch'
+GITVERSION_TAG_PROPERTY_DEVELOP='.MajorMinorPatch'
+GITVERSION_TAG_PROPERTY_RELEASE='.MajorMinorPatch'
+GITVERSION_TAG_PROPERTY_HOTFIX='.MajorMinorPatch'
 GITVERSION_TAG_PROPERTY_MAIN='.MajorMinorPatch'
 GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO=${GITVERSION_CONFIG_MONOREPO:-\$svc/.gitversion.yml}
 JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
+
+env
 
 # Check if GITVERSION_EXEC_PATH is set
 if [ -z "${GITVERSION_EXEC_PATH}" ]; then
@@ -56,7 +58,8 @@ checkout)
 changed)
     if [ "${GITHUB_EVENT_NAME}" = 'push' ]; then
         DIFF_DEST="${GITHUB_REF_NAME}"
-        DIFF_SOURCE=$(git rev-parse "${DIFF_DEST}"^1)
+        # DIFF_SOURCE=$(git rev-parse "${DIFF_DEST}"^1)
+        DIFF_SOURCE="${DIFF_DEST}^"
     else
         DIFF_DEST="${GITHUB_HEAD_REF}"
         DIFF_SOURCE="${GITHUB_BASE_REF}"
@@ -135,39 +138,44 @@ calculate-version)
         service_versions_txt='## impact surface\n'
         changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
         if [ "${#changed_services[@]}" = "0" ]; then
-        service_versions_txt+='No services changed\n'
+            service_versions_txt+='No services changed\n'
         else
-        service_versions_txt="## impact surface\n"
-        for svc in "${changed_services[@]}"; do
-            CONFIG_FILE="${!CONFIG_FILE_VAR}"
-            CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-            svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
-            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
-            log "Running calculation - '${gitversion_calc_cmd}'"
-            gitversion_calc=$($gitversion_calc_cmd)
+            service_versions_txt="## impact surface\n"
+            for svc in "${changed_services[@]}"; do
+                CONFIG_FILE="${!CONFIG_FILE_VAR}"
+                CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
+                svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
+                gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
+                log "Running calculation - '${gitversion_calc_cmd}'"
+                gitversion_calc=$($gitversion_calc_cmd)
 
-            if [ -z "${gitversion_calc}" ]; then
-                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
-                exit 1
-            fi
-            
-            # Used for debugging
-            log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
-            exit_status=$?
-            log "Exit status: $exit_status" >> $GITHUB_OUTPUT
+                if [ -z "${gitversion_calc}" ]; then
+                    echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                    exit 1
+                fi
+                
+                # Used for debugging
+                log "gitversion_calc=$($gitversion_calc_cmd 2>&1)"
+                exit_status=$?
+                log "Exit status: $exit_status" >> $GITHUB_OUTPUT
 
-            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-            if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-                GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
-                log "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
-            fi
+                if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+                    GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_DEST}" | sed 's|(/|^).*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+                else 
+                    GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|(/|^).*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+                fi
 
-            echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
-            echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
-            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-            service_versions_txt+="- ${svc} - ${service_version}\n"
-        done
+                GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+                if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
+                    GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
+                    log "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
+                fi
+
+                echo "GITVERSION_TAG_PROPERTY_NAME=${GITVERSION_TAG_PROPERTY_NAME}"
+                echo "GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY}"
+                service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+                service_versions_txt+="- ${svc} - ${service_version}\n"
+            done
         fi
     fi
     # fix multiline variables

@@ -1,6 +1,7 @@
 import { exec } from "child-process-promise";
 import testConfig from "./config.test.json" with { type: "json" };
 import * as path from "path";
+import * as fs from 'fs';
 
 const {
   PATH,
@@ -10,7 +11,6 @@ const {
 } = process.env;
 
 const SEMVER_YEASY_PATH = path.resolve(`${process.cwd()}/../`)
-const MONOTOOLS_PATH = path.resolve(`${process.cwd()}/../../../`)
 
 beforeAll(async () => {
   await exec(`rm -rf test-workspaces || true`);
@@ -21,28 +21,32 @@ for (const currentTest of testConfig.tests) {
     .replace(/(: |:|\s)/g, "__")
 
   const currentTestWorkspace = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}`);
-  const currentTestGitRepoPath = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}/repo`);
+  const currentTestWorkspaceChangeCalculation = path.resolve(`${currentTestWorkspace}-change-calculation`);
+  const currentTestWorkspacePRDescriptionCalculation = path.resolve(`${currentTestWorkspace}-pr-description-calculation`);
 
   describe(currentTest.name, () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await exec(`
-rm -rf ${currentTestWorkspace} > /dev/null 2>&1 || true
-mkdir -p ${currentTestGitRepoPath}
+mkdir -p ${currentTestWorkspaceChangeCalculation}/repo
+mkdir -p ${currentTestWorkspacePRDescriptionCalculation}/repo
 `);
 
-      await exec(`
+      const gitRepoSetup = `
 git init
 git config user.email 'example@example.com'
 git config user.name 'Example'
-`, { cwd: currentTestGitRepoPath });
+`
 
-      for (const setupStep of currentTest.repoSetup) {
-        await exec(setupStep, { env: { MONOTOOLS_PATH }, cwd: currentTestGitRepoPath });
+      for (const setupStep of [gitRepoSetup, ...currentTest.repoSetup]) {
+        await exec(setupStep, { env: { SEMVER_YEASY_PATH }, cwd: `${currentTestWorkspaceChangeCalculation}/repo` });
+        await exec(setupStep, { env: { SEMVER_YEASY_PATH }, cwd: `${currentTestWorkspacePRDescriptionCalculation}/repo` });
       }
     });
 
     test("change calculation", async () => {
-      const changesFileName = path.resolve(`${currentTestWorkspace}/output.changes.txt`);
+      const currentCasePath = `${currentTestWorkspace}-change-calculation`;
+      const currentTestGitRepoPath = `${currentCasePath}/repo`;
+      const changesFileName = path.resolve(`${currentCasePath}/output.changes.txt`);
       const cmd = `bash ${SEMVER_YEASY_PATH}/semver-yeasy.sh changed ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`;
       // console.log(`Running command: ${cmd}`);
       await exec(
@@ -54,9 +58,9 @@ git config user.name 'Example'
             JQ_EXEC_PATH,
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
-            MONOTOOLS_PATH,
             GITHUB_OUTPUT: changesFileName,
-            ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+            // ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+            // ...(DOTNET_ROOT ? { PATH: `${DOTNET_ROOT}:${PATH}` } : {}),
           },
           cwd: currentTestGitRepoPath,
           shell: "/bin/bash"
@@ -71,10 +75,12 @@ git config user.name 'Example'
     });
 
     test("PR description calculation", async () => {
-      const pullRequestDescriptionFileName = path.resolve(`${currentTestWorkspace}/output.pr-description.txt`);
+      const currentCasePath = `${currentTestWorkspace}-pr-description-calculation`;
+      const currentTestGitRepoPath = `${currentCasePath}/repo`;
+      const pullRequestDescriptionFileName = path.resolve(`${currentCasePath}/output.pr-description.txt`);
       const cmd = `bash ${SEMVER_YEASY_PATH}/semver-yeasy.sh calculate-version ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`;
       // console.log(`Running command: ${cmd}`);
-      await exec(
+      const pullRequestDescriptionCalculationCmdExec = await exec(
         cmd,
         {
           env: {
@@ -83,14 +89,19 @@ git config user.name 'Example'
             JQ_EXEC_PATH,
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
-            MONOTOOLS_PATH,
             GITHUB_OUTPUT: pullRequestDescriptionFileName,
-            ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+            // ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
+            // ...(DOTNET_ROOT ? { PATH: `${DOTNET_ROOT}:${PATH}` } : {}),
           },
           cwd: currentTestGitRepoPath,
           shell: "/bin/bash"
         },
       );
+
+      const pullRequestDescriptionCalculationLogs = path.resolve(`${currentCasePath}/output.pr-description.log`);
+      fs.writeFileSync(pullRequestDescriptionCalculationLogs, pullRequestDescriptionCalculationCmdExec.stdout + "\n" + "---ERROR_LOGS---" + "\n" +
+        pullRequestDescriptionCalculationCmdExec.stderr
+      )
 
       const pullRequestDescriptionCmd = await exec(
         `cat ${pullRequestDescriptionFileName}`,
@@ -106,5 +117,5 @@ git config user.name 'Example'
 }
 
 afterAll(async () => {
-  // await exec(`rm -r test-workspaces || true`);
+  await exec(`rm -r test-workspaces || true`);
 });
