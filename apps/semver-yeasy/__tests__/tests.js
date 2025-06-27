@@ -23,12 +23,14 @@ for (const currentTest of testConfig.tests) {
   const currentTestWorkspace = path.resolve(`${SEMVER_YEASY_PATH}/__tests__/test-workspaces/${currentTestPath}`);
   const currentTestWorkspaceChangeCalculation = path.resolve(`${currentTestWorkspace}-change-calculation`);
   const currentTestWorkspacePRDescriptionCalculation = path.resolve(`${currentTestWorkspace}-pr-description-calculation`);
+  const currentTestWorkspaceUpdatePRDescription = path.resolve(`${currentTestWorkspace}-update-pr-description`);
 
   describe(currentTest.name, () => {
     beforeAll(async () => {
       await exec(`
 mkdir -p ${currentTestWorkspaceChangeCalculation}/repo
 mkdir -p ${currentTestWorkspacePRDescriptionCalculation}/repo
+mkdir -p ${currentTestWorkspaceUpdatePRDescription}/repo
 `);
 
       const gitRepoSetup = `
@@ -40,6 +42,7 @@ git config user.name 'Example'
       for (const setupStep of [gitRepoSetup, ...currentTest.repoSetup]) {
         await exec(setupStep, { env: { SEMVER_YEASY_PATH }, cwd: `${currentTestWorkspaceChangeCalculation}/repo` });
         await exec(setupStep, { env: { SEMVER_YEASY_PATH }, cwd: `${currentTestWorkspacePRDescriptionCalculation}/repo` });
+        await exec(setupStep, { env: { SEMVER_YEASY_PATH }, cwd: `${currentTestWorkspaceUpdatePRDescription}/repo` });
       }
     });
 
@@ -59,8 +62,6 @@ git config user.name 'Example'
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
             GITHUB_OUTPUT: changesFileName,
-            // ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
-            // ...(DOTNET_ROOT ? { PATH: `${DOTNET_ROOT}:${PATH}` } : {}),
           },
           cwd: currentTestGitRepoPath,
           shell: "/bin/bash"
@@ -90,8 +91,6 @@ git config user.name 'Example'
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
             GITHUB_OUTPUT: pullRequestDescriptionFileName,
-            // ...(DOTNET_ROOT ? { DOTNET_ROOT } : {}),
-            // ...(DOTNET_ROOT ? { PATH: `${DOTNET_ROOT}:${PATH}` } : {}),
           },
           cwd: currentTestGitRepoPath,
           shell: "/bin/bash"
@@ -113,9 +112,49 @@ git config user.name 'Example'
         currentTest.expectedOutputs.pullRequestDescription,
       );
     });
+
+    test("Update PR description", async () => {
+      const currentCasePath = `${currentTestWorkspace}-update-pr-description`;
+      const currentTestGitRepoPath = `${currentCasePath}/repo`;
+      const updatePullRequestDescriptionFileName = path.resolve(`${currentCasePath}/output.update-pr-description.txt`);
+      const cmd = `bash ${SEMVER_YEASY_PATH}/semver-yeasy.sh update-pr ${currentTest.inputs.env.GITVERSION_REPO_TYPE}`;
+      // console.log(`Running command: ${cmd}`);
+      const pullRequestDescriptionCalculationCmdExec = await exec(
+        cmd,
+        {
+          env: {
+            ...currentTest.inputs.env,
+            RUN_ENV: 'UNIT_TEST',
+            PATH,
+            JQ_EXEC_PATH,
+            GITVERSION_EXEC_PATH,
+            SEMVER_YEASY_PATH,
+            GITHUB_OUTPUT: updatePullRequestDescriptionFileName,
+            SEMVER_YEASY_PR_BODY: currentTest.expectedOutputs.pullRequestDescription.replace(/^PR_BODY=/, '')
+          },
+          cwd: currentTestGitRepoPath,
+          shell: "/bin/bash"
+        },
+      );
+
+      // const pullRequestDescriptionCalculationLogs = path.resolve(`${currentCasePath}/output.pr-description.log`);
+      // fs.writeFileSync(pullRequestDescriptionCalculationLogs, pullRequestDescriptionCalculationCmdExec.stdout + "\n" + "---ERROR_LOGS---" + "\n" +
+      //   pullRequestDescriptionCalculationCmdExec.stderr
+      // )
+
+      const pullRequestDescriptionCmd = await exec(
+        `cat ${updatePullRequestDescriptionFileName}`,
+        { cwd: currentTestGitRepoPath, shell: "/bin/bash" },
+
+      );
+
+      expect(pullRequestDescriptionCmd.stdout).toBe(
+        `${currentTest.expectedOutputs.updatedPullRequestDescription}\n`,
+      );
+    });
   });
 }
 
 afterAll(async () => {
-  await exec(`rm -r test-workspaces || true`);
+  // await exec(`rm -r test-workspaces || true`);
 });
