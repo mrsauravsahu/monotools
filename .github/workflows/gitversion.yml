@@ -106,7 +106,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
-        SEMVERY_YEASY_PR_BODY: ${{ steps.calculate_service_versions.outputs.PR_BODY }}
+        SEMVERYEASY_PR_BODY: ${{ steps.calculate_service_versions.outputs.PR_BODY }}
       with:
         repo-type: 'MONOREPO'
         mode: 'update-pr'

@@ -205,7 +205,7 @@ update-pr)
     # Use awk to replace the region if it exists, else prepend
     if echo "$PR_DESCRIPTION_TRIMMED" | grep -i -q "$(echo "$REGION_START" | trim)"; then
         # Replace the region
-        UPDATED_PR_BODY=$(awk -v new="$SEMVER_YEASY_PR_BODY" '
+        UPDATED_PR_BODY=$(awk -v new="$SEMVERYEASY_PR_BODY" '
             BEGIN {ins=0}
             {
                 line=tolower($0); gsub(/^[ \t]+|[ \t]+$/, "", line)
@@ -217,9 +217,9 @@ update-pr)
     else
         # Prepend the generated section
         if [[ -z "${PR_DESCRIPTION}" ]]; then 
-            UPDATED_PR_BODY="${SEMVER_YEASY_PR_BODY}"
+            UPDATED_PR_BODY="${SEMVERYEASY_PR_BODY}"
         else
-            UPDATED_PR_BODY="${PR_DESCRIPTION}\n${SEMVER_YEASY_PR_BODY}"
+            UPDATED_PR_BODY="${PR_DESCRIPTION}\n${SEMVERYEASY_PR_BODY}"
         fi
     fi
 
