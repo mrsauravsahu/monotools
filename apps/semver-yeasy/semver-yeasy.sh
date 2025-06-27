@@ -228,7 +228,7 @@ update-pr)
     # Only update the PR if PR_DESCRIPTION was not empty (i.e., not a unit test)
     if [[ -z "${RUN_ENV}" ]]; then
         # Update the PR with the updated description
-        ${JQ_EXEC_PATH} -nc "{\"body\": \"${UPDATED_PR_BODY}\" }" | \
+        ${JQ_EXEC_PATH} -nc --arg body "$UPDATED_PR_BODY" '{"body": $body}' | \
             curl -sL -X PATCH -d @- \
             -H "Content-Type: application/json" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
