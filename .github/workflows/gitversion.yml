@@ -44,7 +44,7 @@ jobs:
         (git checkout develop && git checkout - ) || true; 
 
     - name: Checkout to branch
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@main
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@feat/pr-desc-keep-existing
       id: checkout
       env:
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
@@ -54,7 +54,7 @@ jobs:
 
     - name: Calculate changed services
       id: calculate_changed_services
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@main
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@feat/pr-desc-keep-existing
       env:
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
       with:
@@ -79,7 +79,7 @@ jobs:
         JQ_EXEC_PATH: /usr/bin/jq
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
         GITVERSION_CONFIG_MONOREPO: ${{ env.GITVERSION_CONFIG_MONOREPO }}
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@main
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@feat/pr-desc-keep-existing
       with: 
         repo-type: MONOREPO
         mode: calculate-version
@@ -102,7 +102,7 @@ jobs:
 
     - name: Update PR description
       if: ${{ github.event_name == 'pull_request' }}
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@main
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@feat/pr-desc-keep-existing
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
@@ -115,7 +115,7 @@ jobs:
 
     - name: Tag build
       if: ${{ github.event_name == 'push' && (startsWith(steps.calculate_changed_services.outputs.diff_dest, 'release') || startsWith(steps.calculate_changed_services.outputs.diff_dest, 'hotfix')) && steps.calculate_changed_services.outputs.changed_services != '' }}
-      uses: mrsauravsahu/monotools/apps/semver-yeasy@main
+      uses: mrsauravsahu/monotools/apps/semver-yeasy@feat/pr-desc-keep-existing
       env:
         SEMVERYEASY_CHANGED_SERVICES: ${{ fromJSON(steps.generate_other_targets.outputs.SERVICES) }}
         GITVERSION_EXEC_PATH: /home/runner/.dotnet/tools/dotnet-gitversion
