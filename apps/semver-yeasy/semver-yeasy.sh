@@ -180,7 +180,7 @@ calculate-version)
     fi
     # fix multiline variables
     # from: https://github.com/actions/create-release/issues/64#issuecomment-638695206
-    PR_BODY="${service_versions_txt}"
+    PR_BODY="<!-- #region start pr description by monotools -->\n${service_versions_txt}\n<!-- #region end pr description by monotools -->"
 
     echo "${PR_BODY}"
     echo "PR_BODY=$PR_BODY" >> $GITHUB_OUTPUT

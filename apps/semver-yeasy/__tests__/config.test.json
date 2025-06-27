@@ -26,7 +26,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=develop\ndiff_dest=feat/my-feature\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.1.0\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/service1 - 0.1.0\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -64,7 +64,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - 0.2.1\\n- apps/other-service - 0.2.1\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/semver-yeasy - 0.2.1\\n- apps/other-service - 0.2.1\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -101,7 +101,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/my-features\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/other-service\",\"apps/semver-yeasy\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/semver-yeasy - 0.2.1\\n- apps/other-service - 0.1.1\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/semver-yeasy - 0.2.1\\n- apps/other-service - 0.1.1\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -131,7 +131,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=onlyservice/0.2.0\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/onlyservice\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/onlyservice - 0.2.1\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/onlyservice - 0.2.1\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -165,7 +165,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=onlyservice/0.3.1\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/onlyservice\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/onlyservice - 0.3.2\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/onlyservice - 0.3.2\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -199,7 +199,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main\ndiff_dest=feat/new-sample-feature\nchanged=''\nchanged_services=''\nchanged=true\n",
-        "pullRequestDescription": "PR_BODY=## version bump\\n0.3.2\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## version bump\\n0.3.2\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     },
     {
@@ -242,7 +242,7 @@
       },
       "expectedOutputs": {
         "changes": "diff_source=main^\ndiff_dest=main\nchanged=''\nchanged_services=''\nchanged_services={\"value\":[\"apps/service1\"]}\n",
-        "pullRequestDescription": "PR_BODY=## impact surface\\n- apps/service1 - 0.3.1\\n\n"
+        "pullRequestDescription": "PR_BODY=<!-- #region start pr description by monotools -->\\n## impact surface\\n- apps/service1 - 0.3.1\\n\\n<!-- #region end pr description by monotools -->\n"
       }
     }
   ]
