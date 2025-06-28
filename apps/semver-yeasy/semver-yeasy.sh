@@ -228,34 +228,34 @@ update-pr)
     while IFS= read -r line; do
         # Trim and lowercase for comparison
         trimmed_line=$(echo "$line" | awk '{$1=$1;print}')
-        region_start_trimmed=$(echo "$REGION_START")
-        region_end_trimmed=$(echo "$REGION_END")
 
-        if [[ $IN_REGION -eq 0 && "$trimmed_line" == "$region_start_trimmed" ]]; then
+        if [[ $IN_REGION -eq 0 && "$trimmed_line" == "$REGION_START" ]]; then
             # Found the start marker
             # UPDATED_PR_BODY+="$REGION_START\n"
-            UPDATED_PR_BODY+=$(echo "$SEMVERYEASY_PR_BODY\n")
+            UPDATED_PR_BODY+=$(echo "$SEMVERYEASY_PR_BODY\\n")
             # UPDATED_PR_BODY+="$REGION_END\n"
             IN_REGION=1
             FOUND_REGION=1
             return  # skip the original start marker line
-        elif [[ $IN_REGION -eq 1 && "$trimmed_line" == "$region_end_trimmed" ]]; then
+        elif [[ $IN_REGION -eq 1 && "$trimmed_line" == "$REGION_END" ]]; then
             # Found the end marker
             IN_REGION=0
             return  # skip the original end marker line
         elif [[ $IN_REGION -eq 0 ]]; then
-            UPDATED_PR_BODY+="$line\n"
+            UPDATED_PR_BODY+="$line\\n"
         fi
         # If IN_REGION==1, skip lines (they are being replaced)
     done <<< "$PR_DESCRIPTION"
 
     # If region was not found, prepend the generated section
     if [[ $FOUND_REGION -eq 0 ]]; then
-        UPDATED_PR_BODY="${PR_DESCRIPTION}\n${SEMVERYEASY_PR_BODY}"
+        UPDATED_PR_BODY="${PR_DESCRIPTION}\\n${SEMVERYEASY_PR_BODY}"
     fi
 
     # echo "$PR_DESCRIPTION" | wc -l >> $GITHUB_OUTPUT
-    echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}\n" >> $GITHUB_OUTPUT
+    echo -n "UPDATED_PR_BODY=${UPDATED_PR_BODY}" >> $GITHUB_OUTPUT
+    # echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}\\n" >> $GITHUB_OUTPUT
+    UPDATED_PR_BODY+="$line"$'\n'
 
     # Only update the PR if PR_DESCRIPTION was not empty (i.e., not a unit test)
     if [[ -z "${RUN_ENV}" ]]; then
