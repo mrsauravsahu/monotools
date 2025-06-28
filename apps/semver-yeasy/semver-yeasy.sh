@@ -249,7 +249,11 @@ update-pr)
 
     # If region was not found, prepend the generated section
     if [[ $FOUND_REGION -eq 0 ]]; then
-        UPDATED_PR_BODY="${PR_DESCRIPTION}\\n${SEMVERYEASY_PR_BODY}"
+        if [[ -z $PR_DESCRIPTION ]]; then
+            UPDATED_PR_BODY="${SEMVERYEASY_PR_BODY}\\n\\n"
+        else
+            UPDATED_PR_BODY="${PR_DESCRIPTION}\\n${SEMVERYEASY_PR_BODY}\\n\\n"
+        fi
     fi
 
     # echo "$PR_DESCRIPTION" | wc -l >> $GITHUB_OUTPUT
