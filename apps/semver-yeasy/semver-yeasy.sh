@@ -261,10 +261,12 @@ update-pr)
     # UPDATED_PR_BODY+="$line\\n"
     echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}\\n" >> $GITHUB_OUTPUT
 
+    UPDATED_PR_BODY_NEWLINES_REPLACED=`"$UPDATED_PR_BODY" | sed "s/\\n/\n/g"`
+
     # Only update the PR if PR_DESCRIPTION was not empty (i.e., not a unit test)
     if [[ -z "${RUN_ENV}" ]]; then
         # Update the PR with the updated description
-        ${JQ_EXEC_PATH} -nc --arg body $(echo "$UPDATED_PR_BODY" | sed 's/\\n/\n/g') '{"body": $body}' | \
+        ${JQ_EXEC_PATH} -nc --arg body "${UPDATED_PR_BODY_NEWLINES_REPLACED}" '{"body": $body}' | \
             curl -sL -X PATCH -d @- \
             -H "Content-Type: application/json" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
