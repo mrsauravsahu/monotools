@@ -235,7 +235,11 @@ update-pr)
         fi
     fi
 
-    echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}" >> $GITHUB_OUTPUT
+    {
+        echo "UPDATED_PR_BODY<<EOF"
+        echo "$UPDATED_PR_BODY"
+        echo "EOF"
+    } >> $GITHUB_OUTPUT
 
     # Only update the PR if PR_DESCRIPTION was not empty (i.e., not a unit test)
     if [[ -z "${RUN_ENV}" ]]; then
