@@ -252,7 +252,7 @@ update-pr)
         if [[ -z $PR_DESCRIPTION ]]; then
             UPDATED_PR_BODY="${SEMVERYEASY_PR_BODY}\\n\\n"
         else
-            UPDATED_PR_BODY="${PR_DESCRIPTION}\\n${SEMVERYEASY_PR_BODY}\\n\\n"
+            UPDATED_PR_BODY="${PR_DESCRIPTION}\\n\\n${SEMVERYEASY_PR_BODY}\\n\\n"
         fi
     fi
 
