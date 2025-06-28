@@ -232,7 +232,7 @@ update-pr)
         if [[ $IN_REGION -eq 0 && "$trimmed_line" == "$REGION_START" ]]; then
             # Found the start marker
             # UPDATED_PR_BODY+="$REGION_START\n"
-            UPDATED_PR_BODY+=$(echo "$SEMVERYEASY_PR_BODY\\n")
+            UPDATED_PR_BODY+=$(echo -n "$SEMVERYEASY_PR_BODY\\n")
             # UPDATED_PR_BODY+="$REGION_END\n"
             IN_REGION=1
             FOUND_REGION=1
@@ -242,7 +242,7 @@ update-pr)
             IN_REGION=0
             return  # skip the original end marker line
         elif [[ $IN_REGION -eq 0 ]]; then
-            UPDATED_PR_BODY+="$line\\n"
+            UPDATED_PR_BODY+=$(echo -n "$line\\n")
         fi
         # If IN_REGION==1, skip lines (they are being replaced)
     done <<< "$PR_DESCRIPTION"
@@ -253,9 +253,9 @@ update-pr)
     fi
 
     # echo "$PR_DESCRIPTION" | wc -l >> $GITHUB_OUTPUT
-    echo -n "UPDATED_PR_BODY=${UPDATED_PR_BODY}" >> $GITHUB_OUTPUT
     # echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}\\n" >> $GITHUB_OUTPUT
-    UPDATED_PR_BODY+="$line"$'\n'
+    # UPDATED_PR_BODY+="$line\\n"
+    echo "UPDATED_PR_BODY=${UPDATED_PR_BODY}\\n" >> $GITHUB_OUTPUT
 
     # Only update the PR if PR_DESCRIPTION was not empty (i.e., not a unit test)
     if [[ -z "${RUN_ENV}" ]]; then
