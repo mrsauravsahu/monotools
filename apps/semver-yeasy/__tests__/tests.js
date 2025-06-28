@@ -130,7 +130,7 @@ git config user.name 'Example'
             GITVERSION_EXEC_PATH,
             SEMVER_YEASY_PATH,
             GITHUB_OUTPUT: updatePullRequestDescriptionFileName,
-            SEMVERYEASY_PR_BODY: currentTest.expectedOutputs.pullRequestDescription.replace(/^PR_BODY=/, '')
+            SEMVERYEASY_PR_BODY: currentTest.expectedOutputs.pullRequestDescription.replace(/^PR_BODY=/, '').replace(/\\n/g, '\n')
           },
           cwd: currentTestGitRepoPath,
           shell: "/bin/bash"
