@@ -224,20 +224,30 @@ update-pr)
     IN_REGION=0
     UPDATED_PR_BODY=""
     FOUND_REGION=0
+    COUNTER=0
 
     while IFS= read -r line; do
-        # Trim and lowercase for comparison
-        trimmed_line=$(echo "$line" | awk '{$1=$1;print}')
+        UPDATED_PR_BODY+="COUNT=${COUNTER}"
+        COUNTER=$((COUNTER + 1))
 
-        if [[ $IN_REGION -eq 0 && "$trimmed_line" == "$REGION_START" ]]; then
+        # Trim and lowercase for comparison
+        line=$(echo "$line" | sed "s/\r//") 
+        echo "LINE ${COUNTER} '${line}'" >> $GITHUB_OUTPUT
+        #  | sed 's/(\r|\n)//')
+
+        is_region_start=$(echo "${line}" | grep $REGION_START -no | wc -l | xargs)
+        is_region_end=$(echo "${line}" | grep $REGION_END -no | wc -l | xargs)
+
+        if [[ $IN_REGION -eq 0 && "$is_region_start" != "0" ]]; then
             # Found the start marker
             # UPDATED_PR_BODY+="$REGION_START\n"
             UPDATED_PR_BODY+=$(echo -n "$SEMVERYEASY_PR_BODY\\n")
             # UPDATED_PR_BODY+="$REGION_END\n"
             IN_REGION=1
             FOUND_REGION=1
+            echo "REGION FOUND ON LINE ${COUNTER}"
             return  # skip the original start marker line
-        elif [[ $IN_REGION -eq 1 && "$trimmed_line" == "$REGION_END" ]]; then
+        elif [[ $IN_REGION -eq 1 && "$is_region_end" != "0" ]]; then
             # Found the end marker
             IN_REGION=0
             return  # skip the original end marker line
