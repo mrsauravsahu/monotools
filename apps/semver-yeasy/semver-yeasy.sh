@@ -143,6 +143,7 @@ calculate-version)
         else
             service_versions_txt="## impact surface\n"
             for svc in "${changed_services[@]}"; do
+                echo "calculation for ${svc}"
                 CONFIG_FILE="${!CONFIG_FILE_VAR}"
                 CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
                 svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
@@ -246,7 +247,16 @@ tag)
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
             svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
-            gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}" /tag-prefix="${svc_without_apps_prefix}")
+            gitversion_calc_cmd="${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config ${CONFIG_FILE} /overrideconfig tag-prefix=${svc_without_apps_prefix}"
+
+            log "Running calculation - '${gitversion_calc_cmd}'"
+            gitversion_calc=$($gitversion_calc_cmd)
+
+            if [ -z "${gitversion_calc}" ]; then
+                echo "Error: gitversion_calc turned out to be empty. Please check the configuration file and the command."
+                exit 1
+            fi
+
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
