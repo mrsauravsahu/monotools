@@ -218,8 +218,7 @@ tag)
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}"
-        svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}" /tag-prefix="${svc_without_apps_prefix}")
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}")
 
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
@@ -246,8 +245,8 @@ tag)
             echo "calculation for ${svc}"
             CONFIG_FILE="${!CONFIG_FILE_VAR}"
             CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
-
-            gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}")
+            svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
+            gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}" /tag-prefix="${svc_without_apps_prefix}")
             GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
             GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
             if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
