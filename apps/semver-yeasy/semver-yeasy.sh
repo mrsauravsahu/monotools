@@ -17,6 +17,7 @@ GITVERSION_TAG_PROPERTY_MAIN='.MajorMinorPatch'
 GITVERSION_CONFIG_SINGLE_APP='.gitversion.yml'
 GITVERSION_CONFIG_MONOREPO=${GITVERSION_CONFIG_MONOREPO:-\$svc/.gitversion.yml}
 JQ_EXEC_PATH=${JQ_EXEC_PATH:-jq}
+CONFIG_FILE_VAR="GITVERSION_CONFIG_${repo_type}"
 
 env
 
@@ -241,29 +242,29 @@ tag)
     else
         changed_services=( $SEMVERYEASY_CHANGED_SERVICES )
         for svc in "${changed_services[@]}"; do
-        echo "calculation for ${svc}"
-        CONFIG_FILE=${!CONFIG_FILE_VAR//\$svc/$svc}
-        # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${svc}/.gitversion.yml"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${svc}/.gitversion.yml")
+            echo "calculation for ${svc}"
+            CONFIG_FILE="${!CONFIG_FILE_VAR}"
+            CONFIG_FILE=$(echo "${CONFIG_FILE}" | sed "s|\$svc|$svc|")
 
-        GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
-        GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
-        if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
-            GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
-        fi
+            gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}")
+            GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
+            GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
+            if [ "${GITVERSION_TAG_PROPERTY}" == "" ]; then
+                GITVERSION_TAG_PROPERTY=${GITVERSION_TAG_PROPERTY_DEFAULT}
+            fi
 
-        service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
-        svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
-        if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
-            previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
-            next_commit_count=$((previous_commit_count+1))
-            version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
-            full_service_version="${version_without_count}.${next_commit_count}"
-        else
-            full_service_version="${service_version}"
-        fi
-        git tag -a "${svc_without_prefix}/${full_service_version}" -m "${svc_without_prefix}/${full_service_version}"
-        git push origin "${svc_without_prefix}/${full_service_version}"
+            service_version=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[${GITVERSION_TAG_PROPERTY}] | join(\"\")")
+            svc_without_prefix="$(echo "${svc}" | sed "s|^apps/||")"
+            if [ "${GITVERSION_TAG_PROPERTY}" != ".MajorMinorPatch" ]; then
+                previous_commit_count=$(git tag -l | grep "^${svc_without_prefix}/$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".MajorMinorPatch")-$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r ".PreReleaseLabel")" | grep -o -E '\.[0-9]+$' | grep -o -E '[0-9]+$' | sort -nr | head -1)
+                next_commit_count=$((previous_commit_count+1))
+                version_without_count=$(echo "${gitversion_calc}" | ${JQ_EXEC_PATH} -r "[.MajorMinorPatch,.PreReleaseLabelWithDash] | join(\"\")")
+                full_service_version="${version_without_count}.${next_commit_count}"
+            else
+                full_service_version="${service_version}"
+            fi
+            git tag -a "${svc_without_prefix}/${full_service_version}" -m "${svc_without_prefix}/${full_service_version}"
+            git push origin "${svc_without_prefix}/${full_service_version}"
         done
     fi
 ;;
