@@ -218,7 +218,8 @@ tag)
     if [ "${repo_type}" = 'SINGLE_APP' ]; then
         if [ "${SEMVERYEASY_CHANGED}" = 'true' ]; then
         # ${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}"
-        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}")
+        svc_without_apps_prefix=$(echo "${svc}/" | sed "s|^apps/||")
+        gitversion_calc=$(${GITVERSION_EXEC_PATH} $(pwd) /nonormalize /config "${CONFIG_FILE}" /tag-prefix="${svc_without_apps_prefix}")
 
         GITVERSION_TAG_PROPERTY_NAME="GITVERSION_TAG_PROPERTY_$(echo "${DIFF_SOURCE}" | sed 's|/.*$||' | tr '[[:lower:]]' '[[:upper:]]')"
         GITVERSION_TAG_PROPERTY=${!GITVERSION_TAG_PROPERTY_NAME}
